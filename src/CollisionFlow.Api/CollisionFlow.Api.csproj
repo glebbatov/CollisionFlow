@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>CollisionFlow.Api</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <!-- The API is the composition root: it is the only project allowed to know
+       about both the domain and the infrastructure that serves it. -->
+  <ItemGroup>
+    <ProjectReference Include="..\CollisionFlow.Domain\CollisionFlow.Domain.csproj" />
+    <ProjectReference Include="..\CollisionFlow.Infrastructure\CollisionFlow.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

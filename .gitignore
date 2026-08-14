@@ -399,3 +399,14 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# --- CollisionFlow additions ---
+node_modules/
+dist/
+TestResults/
+coverage/
+playwright-report/
+test-results/
+.env
+.env.*
+!.env.example

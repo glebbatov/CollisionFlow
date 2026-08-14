@@ -1,6 +1,5 @@
 @CollisionFlow_HostAddress = http://localhost:5210
 
-GET {{CollisionFlow_HostAddress}}/weatherforecast/
+### Health probe
+GET {{CollisionFlow_HostAddress}}/health/live
 Accept: application/json
-
-###

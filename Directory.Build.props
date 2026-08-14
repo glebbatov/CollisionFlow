@@ -1,0 +1,23 @@
+<Project>
+
+  <!--
+    Central build configuration for every project in the solution.
+    Keeping these here means a project file only declares what makes it different,
+    and the whole repo cannot drift on language version or nullability settings.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- A warning is a bug that has not happened yet. The build fails on them. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- Emit XML docs so Swagger/OpenAPI can surface them; CS1591 would otherwise
+         demand a doc comment on every public member, which is noise, not safety. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+</Project>

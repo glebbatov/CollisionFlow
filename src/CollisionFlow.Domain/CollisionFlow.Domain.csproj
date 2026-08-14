@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The domain has ZERO dependencies - not on ASP.NET, not on a database driver,
+    not on a NuGet package. Business rules that cannot reference infrastructure
+    cannot accidentally depend on it. This emptiness is the design.
+  -->
+  <PropertyGroup>
+    <RootNamespace>CollisionFlow.Domain</RootNamespace>
+  </PropertyGroup>
+
+</Project>
