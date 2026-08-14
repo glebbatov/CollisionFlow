@@ -1,0 +1,6 @@
+@CollisionFlow_HostAddress = http://localhost:5210
+
+GET {{CollisionFlow_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
