@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ApiError, api } from './api/client'
+import { BracketLink } from './components/BracketLink'
+import { Byline } from './components/Byline'
 import { DataSourceBanner } from './components/DataSourceBanner'
 import { Eyebrow } from './components/Eyebrow'
 import { JobRow } from './components/JobRow'
@@ -149,7 +151,7 @@ export default function App() {
       <header className="masthead" ref={masthead}>
         <div className="masthead__inner">
           <h1 className="wordmark">
-            CollisionFlow
+            CollisionFlow <span className="wordmark__for">for Crash Champions</span>
             <span className="wordmark__sub">Repair status tracker</span>
           </h1>
 
@@ -159,21 +161,18 @@ export default function App() {
               to open. */}
           <nav className="masthead__nav" aria-label="Sections">
             {NAV.map((item) => (
-              <a key={item.href} className="navlink" href={item.href}>
-                <span className="navlink__bracket" aria-hidden="true">
-                  [
-                </span>{' '}
-                {item.label}{' '}
-                <span className="navlink__bracket" aria-hidden="true">
-                  ]
-                </span>
-              </a>
+              <BracketLink key={item.href} href={item.href} variant="nav">
+                {item.label}
+              </BracketLink>
             ))}
           </nav>
 
+          {/* The source name is a separate span so the narrowest phones can hide it
+              from view while the accessible name stays "Live · Azure SQL". */}
           <p className={`pill ${live ? 'pill--live' : 'pill--degraded'}`}>
             <span className="pill__dot" aria-hidden="true" />
-            {live ? 'Live · Azure SQL' : 'Demo · in-memory'}
+            {live ? 'Live' : 'Demo'}
+            <span className="pill__source"> · {live ? 'Azure SQL' : 'in-memory'}</span>
           </p>
         </div>
       </header>
@@ -195,6 +194,8 @@ export default function App() {
             page, or in the API — it is rows in a table, and the database refuses an illegal
             move even when the request never touches this code.
           </p>
+
+          <Byline />
 
           <ul className="hero__meta">
             <li>
@@ -266,8 +267,12 @@ export default function App() {
                     <tr>
                       <th scope="col">RO #</th>
                       <th scope="col">Customer</th>
-                      <th scope="col">Vehicle</th>
-                      <th scope="col">Center</th>
+                      <th scope="col" className="col--vehicle">
+                        Vehicle
+                      </th>
+                      <th scope="col" className="col--center">
+                        Center
+                      </th>
                       <th scope="col">Status</th>
                       <th scope="col">Move</th>
                       <th scope="col">Audit</th>
@@ -313,7 +318,9 @@ export default function App() {
 
       <footer className="footer">
         <div className="footer__inner">
-          <p>CollisionFlow · take-home project</p>
+          <p>
+            CollisionFlow · take-home project by <a href="https://batovgleb.com/">Gleb Batov</a>
+          </p>
           <p>
             <a href="https://github.com/glebbatov/CollisionFlow">Source on GitHub</a>
           </p>

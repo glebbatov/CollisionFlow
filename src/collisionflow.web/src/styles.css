@@ -3,47 +3,73 @@
   CollisionFlow - design tokens
   ==========================================================================
 
-  An editorial dark system: a near-black canvas, hairline rules instead of
-  filled cards, square corners, and a single accent used sparingly. Structure
-  is carried by whitespace and 1px lines rather than by boxes and shadows,
-  which keeps a dense operational table legible without it looking like a
+  An editorial system: an off-white canvas, hairline rules instead of filled
+  cards, square corners, and a single accent used sparingly. Structure is
+  carried by whitespace and 1px lines rather than by boxes and shadows, which
+  keeps a dense operational table legible without it looking like a
   spreadsheet.
 
   Two families do all the work. A light, wide geometric sans sets display
   type; a monospace sets every label, number and piece of metadata. The
   contrast between them is the design - there is no third font and no
-  decorative weight.
+  decorative weight. Uppercase, tracked-out mono is a LABEL; normal-case mono
+  is DATA (a path, an address, a count). That distinction is used everywhere.
+
+  The file reads top to bottom in page order: tokens, base, the primitives
+  every section shares, then the masthead, hero, board, cards, architecture
+  and footer, and finally the responsive and motion rules that cut across all
+  of them.
 */
 :root {
-  /* Surfaces, darkest to lightest. */
-  --void: #0e0e0e;
-  --surface: #141414;
-  --surface-raised: #191919;
-  --surface-hover: #1f1f1f;
+  /* Surfaces, lightest to darkest. The page is a hair off pure white so that
+     cards, which ARE pure white, still read as raised without needing a shadow. */
+  --void: #fbfbfc;
+  --surface: #f2f2f4;
+  --surface-raised: #ffffff;
+  --surface-hover: #ebebef;
 
   /* Hairlines. --line is the structural rule; --line-soft is for divisions
      inside an already-bordered element, where a full-strength rule reads as
      a second box. */
-  --line: #2f2f2f;
-  --line-soft: rgba(255, 255, 255, 0.07);
-  --line-strong: #3f3f3f;
+  --line: #e2e2e6;
+  --line-soft: rgba(15, 15, 20, 0.06);
+  --line-strong: #c8c8ce;
 
   /* Text. Every one of these clears 4.5:1 against all three surfaces, so a
      label never becomes unreadable just because it sits on a raised row. */
-  --ink: #f2f2f2;
-  --ink-muted: #c6c6c6;
-  --ink-dim: #a9a9a9;
-  --ink-faint: #8a8a8a;
+  --ink: #14141a;
+  --ink-muted: #40404a;
+  --ink-dim: #55555f;
+  --ink-faint: #6e6e78;
   /* Purely ornamental: the brackets around a label, hairline glyphs. Every use
      is aria-hidden and duplicates nothing, so it is exempt from SC 1.4.3 -
      which is exactly why it must never be used for anything else. */
-  --ink-deco: #5a5a5a;
+  --ink-deco: #b4b4bd;
 
-  --accent: #cfff6a;
-  --accent-ink: #0e0e0e;
-  --accent-wash: rgba(207, 255, 106, 0.09);
+  /*
+    Crash Champions red, in three values, because one red cannot do all three jobs.
 
-  --danger: #ff8f85;
+    --accent is the brand red itself: fills, borders, focus rings. White on it measures
+    4.85:1. Against --void it measures 3.98:1 - enough for a component boundary
+    (SC 1.4.11 asks 3:1) but NOT enough for small text.
+
+    --accent-text is the tint used wherever the brand color has to BE text. It measures
+    6.9:1 on --void and 5.9:1 on --surface-hover, so a label stays readable on every
+    surface in the system.
+
+    --accent-ink is what sits ON the fill, and is white rather than the near-black a
+    lighter accent would need - black on this red is 4.33:1 and would fail.
+
+    --accent-hover is the fill's hovered state: a half step darker, so white on it
+    climbs to 6.3:1 and the change reads as "deeper", not "different".
+  */
+  --accent: #e4002b;
+  --accent-text: #cc0026;
+  --accent-hover: #c20025;
+  --accent-ink: #ffffff;
+  --accent-wash: rgba(228, 0, 43, 0.07);
+
+  --danger: #a4001a;
 
   /*
     Status hues. Color is reinforcement only - every badge and tile also
@@ -51,23 +77,22 @@
     grayscale or with any form of color vision deficiency. The hues are
     ordered so that adjacent workflow steps are never adjacent on the wheel.
   */
-  --status-Received: #8ecdf0;
-  --status-InProgress: #cfff6a;
-  --status-WaitingOnParts: #f2a15c;
-  --status-QualityCheck: #c0a9f0;
-  --status-ReadyForPickup: #5ad3a0;
-  --status-Completed: #9a9a9a;
+  --status-Received: #0369a1;
+  --status-InProgress: #c2410c;
+  --status-WaitingOnParts: #a16207;
+  --status-QualityCheck: #6d28d9;
+  --status-ReadyForPickup: #15803d;
+  --status-Completed: #52525b;
 
   --font-display: 'Outfit', 'Segoe UI Variable Display', 'Segoe UI', system-ui,
     -apple-system, sans-serif;
   --font-mono: 'DM Mono', ui-monospace, 'Cascadia Mono', Consolas, 'SF Mono', monospace;
 
   /*
-    Fluid type built from clamp() rather than the raw viewport units the
-    reference uses. A size expressed purely in vw ignores the browser's font
-    size and stops responding to zoom, which fails WCAG 1.4.4 (Resize Text).
-    Anchoring both ends of every clamp in rem keeps the fluidity and keeps
-    the text resizable.
+    Fluid type built from clamp() rather than raw viewport units. A size
+    expressed purely in vw ignores the browser's font size and stops
+    responding to zoom, which fails WCAG 1.4.4 (Resize Text). Anchoring both
+    ends of every clamp in rem keeps the fluidity and keeps the text resizable.
   */
   --step--2: clamp(0.6875rem, 0.66rem + 0.14vw, 0.75rem);
   --step--1: clamp(0.8125rem, 0.78rem + 0.17vw, 0.9375rem);
@@ -81,6 +106,14 @@
   --gutter: clamp(1.25rem, 5.5vw, 5.5rem);
   --section-space: clamp(4rem, 9vh, 6.5rem);
   --shell: 96rem;
+  /*
+    The actual text measure. A section sets max-width:--shell and then pads
+    itself by --gutter, so its CONTENT is narrower than the shell by two
+    gutters. Anything that centers itself inside a full-bleed parent has to
+    subtract the same amount or it renders visibly wider than every section
+    above it.
+  */
+  --measure: calc(var(--shell) - (var(--gutter) * 2));
 
   /* Square by default. The only curve in the system is a full pill. */
   --radius: 0px;
@@ -91,6 +124,10 @@
   --masthead-h: 4.9rem;
 }
 
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
 /*
   Without this, every in-page anchor lands with its heading tucked underneath
   the sticky masthead. scroll-padding-top on the scroll container is the fix
@@ -99,16 +136,13 @@
 */
 html {
   scroll-padding-top: calc(var(--masthead-h) + 1.5rem);
+  -webkit-text-size-adjust: 100%;
 }
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
-}
-
-html {
-  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -147,13 +181,13 @@ a {
 }
 
 a:hover {
-  color: var(--accent);
-  text-decoration-color: var(--accent);
+  color: var(--accent-text);
+  text-decoration-color: var(--accent-text);
 }
 
 /* A visible, high-contrast focus ring on every interactive element.
    WCAG 2.2 raised the bar here (SC 2.4.11 / 2.4.13) and the browser default
-   is easy to lose against a near-black surface. */
+   is easy to lose against a busy table. */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
@@ -197,52 +231,100 @@ a:hover {
    ========================================================================== */
 
 /*
-  The bracketed monospace label. Borrowed wholesale from the reference, where
-  it is the single most recognizable element of the system. The brackets are
+  The bracketed monospace label that opens every section. The brackets are
   real elements marked aria-hidden rather than CSS generated content, because
   several screen readers do announce ::before content and "left square bracket
   the shop floor right square bracket" is not what anyone needs to hear.
 */
 .eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5em;
   font-family: var(--font-mono);
   font-size: var(--step--2);
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  color: var(--accent);
-  line-height: 1;
+  color: var(--accent-text);
+  line-height: 1.4;
 }
 
+/* Spaced by margin, not by a typed space or flex gap: with no whitespace
+   between bracket and word there is nowhere to break, so when a long label
+   wraps at 320px the closing bracket stays glued to its last word instead of
+   drifting to the far edge of the line. */
 .eyebrow__bracket {
   color: var(--ink-deco);
   font-weight: 300;
 }
 
+.eyebrow__bracket:first-child {
+  margin-inline-end: 0.5em;
+}
+
+.eyebrow__bracket:last-child {
+  margin-inline-start: 0.5em;
+}
+
+/* For a label inside a section, under the accent one that opened it. */
 .eyebrow--quiet {
   color: var(--ink-dim);
 }
 
-/* Monospace metadata: file paths, counts, timestamps, technology names. */
-.mono {
+/*
+  The bracketed link - the eyebrow's idiom made interactive. Used for the
+  masthead nav and for the byline's contact links, so a link that is not part
+  of running text looks the same wherever it appears.
+
+  min-height, not just padding: 11px monospace gives a 19px line box, and
+  WCAG 2.2 SC 2.5.8 wants 24x24 for a standalone target. Padding alone would
+  leave it dependent on the font that happens to load.
+*/
+.bracketlink {
+  display: inline-flex;
+  align-items: center;
+  /* inline-flex collapses the whitespace between the bracket spans and the
+     label, so the gap has to be declared rather than typed. */
+  gap: 0.45em;
+  min-height: 1.5rem;
+  padding-block: 0.3rem;
   font-family: var(--font-mono);
-  font-size: var(--step--1);
-  letter-spacing: 0.02em;
+  color: var(--ink-dim);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 200ms ease;
 }
 
-.mono--label {
+.bracketlink:hover {
+  color: var(--ink);
+}
+
+.bracketlink__bracket {
+  color: var(--ink-deco);
+  transition: color 200ms ease;
+}
+
+.bracketlink:hover .bracketlink__bracket,
+.bracketlink:focus-visible .bracketlink__bracket {
+  color: var(--accent-text);
+}
+
+/* Navigation is a LABEL: uppercase and tracked. */
+.bracketlink--nav {
   font-size: var(--step--2);
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  color: var(--ink-dim);
+}
+
+/* An address or a URL is DATA: normal case, barely tracked, so an email
+   address still looks like one. */
+.bracketlink--meta {
+  font-size: var(--step--1);
+  letter-spacing: 0.02em;
+  color: var(--ink-muted);
 }
 
 code {
   font-family: var(--font-mono);
   font-size: 0.9em;
-  color: var(--accent);
+  color: var(--accent-text);
   background: var(--accent-wash);
   padding: 0.1em 0.4em;
   border-radius: var(--radius);
@@ -283,6 +365,11 @@ code {
   white-space: nowrap;
 }
 
+/* The one place the accent appears in the masthead. */
+.wordmark__for {
+  color: var(--accent-text);
+}
+
 .wordmark__sub {
   display: block;
   margin-top: 0.5rem;
@@ -298,74 +385,6 @@ code {
   display: flex;
   align-items: center;
   gap: clamp(0.75rem, 2.5vw, 2.75rem);
-}
-
-/* min-height, not just padding: 11px monospace gives a 19px line box, and
-   WCAG 2.2 SC 2.5.8 wants 24x24 for a standalone target. Padding alone would
-   leave it dependent on the font that happens to load. */
-.navlink {
-  display: inline-flex;
-  align-items: center;
-  /* inline-flex collapses the whitespace between the bracket spans and the
-     label, so the gap has to be declared rather than typed. */
-  gap: 0.45em;
-  min-height: 1.5rem;
-  padding-block: 0.3rem;
-  font-family: var(--font-mono);
-  font-size: var(--step--2);
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--ink-dim);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: color 200ms ease;
-}
-
-.navlink:hover {
-  color: var(--ink);
-}
-
-.navlink__bracket {
-  color: var(--ink-deco);
-  transition: color 200ms ease;
-}
-
-.navlink:hover .navlink__bracket {
-  color: var(--accent);
-}
-
-@media (max-width: 60rem) {
-  .masthead__nav {
-    display: none;
-  }
-}
-
-/* At phone widths the wordmark and the data-source pill are competing for
-   about 350px. Tightening the tracking on both keeps them on one line, which
-   matters more than either being at its ideal size: a sticky bar that wraps to
-   two rows eats a tenth of the viewport on every screen. */
-@media (max-width: 34rem) {
-  .masthead__inner {
-    gap: 0.5rem 0.75rem;
-  }
-
-  .wordmark {
-    font-size: var(--step-0);
-    letter-spacing: 0.08em;
-  }
-
-  /* Tracked-out 11px monospace is wider than the wordmark above it - at 320px
-     the subtitle, not the title, is what breaks the line. */
-  .wordmark__sub {
-    margin-top: 0.35rem;
-    font-size: 0.625rem;
-    letter-spacing: 0.06em;
-  }
-
-  .pill {
-    padding-inline: 0.55rem;
-    letter-spacing: 0.04em;
-  }
 }
 
 /* Live data-source indicator. Text carries the meaning; the dot is
@@ -399,12 +418,73 @@ code {
 
 .pill--live .pill__dot {
   background: var(--status-ReadyForPickup);
-  box-shadow: 0 0 0 3px rgba(90, 211, 160, 0.16);
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.18);
 }
 
 .pill--degraded .pill__dot {
   background: var(--status-WaitingOnParts);
-  box-shadow: 0 0 0 3px rgba(242, 161, 92, 0.16);
+  box-shadow: 0 0 0 3px rgba(161, 98, 7, 0.18);
+}
+
+/* Hidden below 60rem rather than folded into a hamburger: four links to four
+   sections of one page do not justify a menu a keyboard user has to open. */
+@media (max-width: 60rem) {
+  .masthead__nav {
+    display: none;
+  }
+}
+
+/* Under 88rem the full wordmark, the nav and the pill no longer share a row,
+   and a sticky bar that wraps to two rows eats a tenth of every screen. The
+   client name is the part that goes: it is context, and the closing section
+   repeats it - the product name and the live indicator are the two things the
+   bar exists to show. 88rem is also where the board folds and the tally goes
+   to three across: below it the whole page is in its laptop arrangement. */
+@media (max-width: 88rem) {
+  .wordmark__for {
+    display: none;
+  }
+}
+
+/* At phone widths the wordmark and the pill are competing for about 280px.
+   Tightening the tracking on both keeps them on one line, which matters more
+   than either being at its ideal size. */
+@media (max-width: 34rem) {
+  .masthead__inner {
+    gap: 0.5rem 0.75rem;
+  }
+
+  .wordmark {
+    font-size: var(--step-0);
+    letter-spacing: 0.08em;
+  }
+
+  /* Tracked-out 11px monospace is wider than the wordmark above it - at 320px
+     the subtitle, not the title, is what breaks the line. */
+  .wordmark__sub {
+    margin-top: 0.35rem;
+    font-size: 0.625rem;
+    letter-spacing: 0.06em;
+  }
+
+  .pill {
+    padding-inline: 0.55rem;
+    letter-spacing: 0.04em;
+  }
+}
+
+/* At the 320px floor the pill keeps its state word and drops the source
+   name from view - visually only. It stays in the accessible name, because
+   "Live" alone does not tell a screen reader user what is live. */
+@media (max-width: 26rem) {
+  .pill__source {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
 }
 
 /* ==========================================================================
@@ -419,8 +499,10 @@ code {
   overflow: hidden;
 }
 
-/* A single soft bloom behind the headline. It is the only non-flat thing on
-   the page, which is what keeps it from reading as a gradient theme. */
+/* A single soft bloom behind the headline, in the accent at a whisper. It is
+   the only non-flat thing on the page, which is what keeps it from reading
+   as a gradient theme - and it is mixed from the one accent rather than
+   bringing in a second hue for the purpose. */
 .hero::before {
   content: '';
   position: absolute;
@@ -428,7 +510,7 @@ code {
   height: 40rem;
   background: radial-gradient(
     45% 50% at 30% 40%,
-    rgba(207, 255, 106, 0.07),
+    color-mix(in srgb, var(--accent) 9%, transparent),
     transparent 70%
   );
   pointer-events: none;
@@ -458,9 +540,43 @@ code {
   line-height: 1.5;
 }
 
-/* The metadata strip. Hairline-divided cells of monospace facts - the
-   reference's signature way of grounding a large headline in something
-   concrete. */
+/*
+  The byline. Editorial order is eyebrow, headline, standfirst, byline - so
+  the author sits exactly where a reader of any magazine expects to find one,
+  above the fold and without a bar of its own. Name and role are display
+  type; the ways to reach the author are data, so they take the mono
+  bracket-link idiom.
+*/
+.byline {
+  margin: 1.75rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 2rem;
+}
+
+.byline__who {
+  font-size: var(--step-0);
+  color: var(--ink-dim);
+}
+
+.byline__who strong {
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.byline__links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 1.1rem;
+}
+
+/* The metadata strip. Hairline-divided cells of monospace facts - the way
+   the system grounds a large headline in something concrete. */
 .hero__meta {
   display: flex;
   flex-wrap: wrap;
@@ -502,7 +618,6 @@ code {
   }
 }
 
-.hero__meta dt,
 .hero__meta-label {
   font-family: var(--font-mono);
   font-size: var(--step--2);
@@ -531,7 +646,7 @@ code {
   padding: var(--section-space) var(--gutter);
 }
 
-/* An "alt" section is marked by a rule and a half-step lighter canvas, not
+/* An "alt" section is marked by a rule and a half-step darker canvas, not
    by a card. Full-bleed, with its own contents re-centered inside. */
 .section--alt {
   max-width: none;
@@ -540,7 +655,7 @@ code {
 }
 
 .section--alt > * {
-  max-width: var(--shell);
+  max-width: var(--measure);
   margin-inline: auto;
 }
 
@@ -622,9 +737,16 @@ code {
    Tally
    ========================================================================== */
 
+/* Six tiles in one ruled block. The column count is explicit rather than
+   auto-fit: six items into "however many fit" leaves an empty cell inside the
+   border wherever the count and the columns disagree, and an empty cell in a
+   ruled grid reads as a missing status. Six, three and two all divide six
+   exactly. Six across only from 88rem, where the longest label ("Waiting on
+   Parts") still sits on one line in every tile; below that, three across
+   keeps every tile the same height. */
 .tally {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0;
   list-style: none;
   padding: 0;
@@ -632,11 +754,37 @@ code {
   border: 1px solid var(--line);
 }
 
+@media (max-width: 88rem) {
+  .tally {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 34rem) {
+  .tally {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* At the 320px floor two tiles cannot hold the longest label on one line;
+   one column is the last arrangement in which every tile matches. */
+@media (max-width: 22rem) {
+  .tally {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .tally__item {
   padding: 1.35rem 1.5rem;
   border-right: 1px solid var(--line-soft);
   border-bottom: 1px solid var(--line-soft);
   position: relative;
+}
+
+@media (max-width: 34rem) {
+  .tally__item {
+    padding: 1.1rem 0.85rem;
+  }
 }
 
 /* The 2px top rule is the only place a status hue appears at size. It sits
@@ -671,17 +819,51 @@ code {
   color: var(--ink-dim);
 }
 
+@media (max-width: 34rem) {
+  .tally__label {
+    letter-spacing: 0.08em;
+  }
+}
+
 /* ==========================================================================
    Board
    ========================================================================== */
 
-/* The table is wider than a phone. Scrolling it horizontally in its own
-   container keeps the page itself reflowing at 320px, which WCAG 1.4.10
-   asks for - and below 60rem the table drops the horizontal axis entirely
-   and becomes a stack of labelled cards. */
+/*
+  The table is wider than a phone. Scrolling it horizontally in its own
+  container keeps the page itself reflowing at 320px, which WCAG 1.4.10 asks
+  for - and below 60rem the table drops the horizontal axis entirely and
+  becomes a stack of labeled cards.
+
+  position:relative is load-bearing. Every "Move" cell holds a visually
+  hidden <label>, and visually-hidden means position:absolute. Without a
+  positioned ancestor those labels resolve against the page, at the static
+  position of a column that may sit past the right edge of the viewport -
+  and one 1px box out there is enough to give the whole document a
+  horizontal scrollbar. Anchoring them here keeps them inside the box that
+  is allowed to scroll.
+*/
 .board__scroll {
+  position: relative;
   border: 1px solid var(--line);
   overflow-x: auto;
+  /*
+    Scroll shadows. When the table is wider than its box - a 1024px tablet,
+    a 1280px laptop - the Move column is off to the right, and nothing about
+    a clipped edge says so. Two page-colored covers scroll WITH the content
+    (background-attachment: local) and two soft shadows stay put, so a shadow
+    shows only on an edge that has more behind it and fades as that edge is
+    reached. Pure CSS, no scroll listener, and it needs the rows to stay
+    transparent - which is why the header has no fill of its own.
+  */
+  background:
+    linear-gradient(to right, var(--void) 40%, transparent) 0 0,
+    linear-gradient(to left, var(--void) 40%, transparent) 100% 0,
+    linear-gradient(to right, rgba(15, 15, 20, 0.12), transparent) 0 0,
+    linear-gradient(to left, rgba(15, 15, 20, 0.12), transparent) 100% 0;
+  background-repeat: no-repeat;
+  background-size: 2.5rem 100%, 2.5rem 100%, 0.75rem 100%, 0.75rem 100%;
+  background-attachment: local, local, scroll, scroll;
 }
 
 .board {
@@ -691,15 +873,13 @@ code {
   font-size: var(--step--1);
 }
 
-/* Uniform row height is what makes a board scannable - a column that wraps on
-   three rows out of twenty destroys the horizontal rhythm the eye is using to
-   track across. The cells refuse to wrap and the container scrolls instead;
-   below 60rem the table stops being a table at all, so the rule lifts. */
+/*
+  Uniform row height is what makes a board scannable - a column that wraps on
+  three rows out of twenty destroys the horizontal rhythm the eye is using to
+  track across - so the cells refuse to wrap and the container scrolls
+  instead. Below 60rem the table stops being a table at all, so the rule lifts.
+*/
 @media (min-width: 60.001rem) {
-  .board {
-    min-width: 62rem;
-  }
-
   .board td,
   .board th {
     white-space: nowrap;
@@ -709,16 +889,49 @@ code {
 .board th,
 .board td {
   text-align: left;
-  padding: 0.95rem 0.9rem;
+  padding: 0.95rem 0.75rem;
   border-bottom: 1px solid var(--line-soft);
   vertical-align: middle;
+}
+
+/*
+  Seven columns need about 1200px. Between 60rem and 88rem - a 1024px tablet,
+  a 1280px or 1366px laptop - they do not fit, and the alternative to folding
+  is the Move column, the reason the board exists, sitting past the right
+  edge. So in that band the two descriptive columns fold under their primary:
+  the vehicle under the customer, the center under the RO number. Every row
+  is then exactly two lines, which keeps the rhythm; the <th> for each folded
+  column goes with it, so the table stays consistent for assistive technology.
+*/
+.cell__sub {
+  display: none;
+}
+
+@media (min-width: 60.001rem) and (max-width: 88rem) {
+  .board .col--vehicle,
+  .board .col--center {
+    display: none;
+  }
+
+  .cell__sub {
+    display: block;
+    margin-top: 0.2rem;
+    font-family: var(--font-display);
+    font-size: var(--step--2);
+    letter-spacing: 0.005em;
+    color: var(--ink-dim);
+  }
+
+  .board th,
+  .board td {
+    padding-inline: 0.6rem;
+  }
 }
 
 /* Not position:sticky. The scroll container above computes overflow-y to auto
    the moment overflow-x is set, so a sticky header would anchor to a box that
    never scrolls vertically - it would simply never move. */
 .board thead th {
-  background: var(--surface-raised);
   font-family: var(--font-mono);
   font-size: var(--step--2);
   font-weight: 400;
@@ -797,93 +1010,8 @@ code {
   color: var(--ink-faint);
 }
 
-/* ==========================================================================
-   Controls
-   ========================================================================== */
-
-.move {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-select,
-button {
-  font-family: var(--font-mono);
-  font-size: var(--step--2);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  border-radius: var(--radius);
-  border: 1px solid var(--line);
-  padding: 0.55rem 0.75rem;
-  background: var(--surface-raised);
-  color: var(--ink-muted);
-  /* WCAG 2.2 SC 2.5.8 asks for a 24x24 minimum target. */
-  min-height: 2.5rem;
-  cursor: pointer;
-  transition: border-color 180ms ease, background-color 180ms ease,
-    color 180ms ease;
-}
-
-select {
-  /* Fixed width so the Update buttons line up down the column instead of
-     stepping in and out with the length of each status name. */
-  min-width: 9rem;
-  padding-right: 1.75rem;
-  appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--ink-dim) 50%),
-    linear-gradient(135deg, var(--ink-dim) 50%, transparent 50%);
-  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
-  background-size: 5px 5px, 5px 5px;
-  background-repeat: no-repeat;
-}
-
-select:hover:not(:disabled),
-button:hover:not(:disabled) {
-  border-color: var(--line-strong);
-  color: var(--ink);
-}
-
-/* The one filled control on the page. Everything else is an outline, so the
-   primary action does not have to shout to be found. */
-button {
-  background: var(--accent);
-  color: var(--accent-ink);
-  border-color: var(--accent);
-  font-weight: 500;
-  padding-inline: 1.1rem;
-}
-
-button:hover:not(:disabled) {
-  background: #ddff8c;
-  border-color: #ddff8c;
-  color: var(--accent-ink);
-}
-
-button:disabled,
-select:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.button--quiet {
-  background: transparent;
-  color: var(--ink-dim);
-  border-color: var(--line);
-  font-weight: 400;
-}
-
-.button--quiet:hover:not(:disabled) {
-  background: transparent;
-  color: var(--ink);
-  border-color: var(--line-strong);
-}
-
-/* ==========================================================================
-   Per-status accents. Color is reinforcement only - every badge and tile
-   also carries its text label.
-   ========================================================================== */
-
+/* Per-status accents. Color is reinforcement only - every badge and tile
+   also carries its text label. */
 .badge--Received { border-left-color: var(--status-Received); }
 .badge--Received .badge__glyph { color: var(--status-Received); }
 .tally__item--Received::before { background: var(--status-Received); }
@@ -907,6 +1035,105 @@ select:disabled {
 .badge--Completed { border-left-color: var(--status-Completed); }
 .badge--Completed .badge__glyph { color: var(--status-Completed); }
 .tally__item--Completed::before { background: var(--status-Completed); }
+
+/* ==========================================================================
+   Controls
+   ========================================================================== */
+
+.move {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+select,
+button {
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  padding: 0.55rem 0.75rem;
+  background: var(--surface-raised);
+  color: var(--ink-muted);
+  /* WCAG 2.2 SC 2.5.8 asks for a 24x24 minimum target. */
+  min-height: 2.5rem;
+  cursor: pointer;
+  transition: border-color 180ms ease, background-color 180ms ease,
+    color 180ms ease;
+}
+
+select {
+  /* A fixed width, not a minimum: a select sizes itself to its widest option,
+     so with min-width alone the Update buttons stepped in and out down the
+     column depending on which moves each order happened to allow. 11rem holds
+     the longest status name with room to spare. */
+  width: 11rem;
+  padding-right: 1.75rem;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-dim) 50%),
+    linear-gradient(135deg, var(--ink-dim) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+select:hover:not(:disabled) {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/*
+  The one filled control on the page. Everything else is an outline, so the
+  primary action does not have to shout to be found - and it only fills once
+  it can actually be pressed. Two dozen rows each carrying a red block that
+  does nothing until a status is chosen would be two dozen false alarms; the
+  fill arriving the moment a move is picked is what tells the eye "now".
+*/
+button {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  font-weight: 500;
+  padding-inline: 1.1rem;
+}
+
+button:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--accent-ink);
+}
+
+/* Not faded red: a ghost. The whisper of a border is what separates it from
+   the outlined History button beside it, which IS pressable. Contrast rules
+   exempt an inactive control (SC 1.4.3), but the text still clears 4.5:1 so
+   the word is readable, not just present. */
+button:disabled {
+  background: transparent;
+  border-color: var(--line-soft);
+  color: var(--ink-faint);
+  font-weight: 400;
+  cursor: not-allowed;
+}
+
+.button--quiet {
+  background: transparent;
+  color: var(--ink-dim);
+  border-color: var(--line);
+  font-weight: 400;
+}
+
+.button--quiet:hover:not(:disabled) {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
 
 /* ==========================================================================
    Audit trail
@@ -968,9 +1195,10 @@ select:disabled {
    ========================================================================== */
 
 /*
-  Cards are hairline cells in a grid rather than floating panels: negative
-  margins collapse the shared borders so the whole group reads as one ruled
-  block, the way a contents page does.
+  Cards are hairline cells in a grid rather than floating panels: shared
+  borders make the whole group read as one ruled block, the way a contents
+  page does. The container draws the top and left edge; every cell draws its
+  own right and bottom edge; nothing is doubled.
 */
 .cards {
   list-style: none;
@@ -987,14 +1215,21 @@ select:disabled {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
 }
 
-/* Five items into an auto-fit grid leaves a hole wherever the count and the
-   column count disagree. Three explicit columns with the last item spanning
-   two closes the block off squarely at every width above 64rem. */
+/* Five items into an auto-fit grid leave a hole wherever the count and the
+   column count disagree. Three explicit columns above 64rem, and the last
+   item stretched across whatever is left at every width, close the block off
+   squarely: 3+2, 2+2+1(wide) or 5 singles - never a notch. */
 @media (min-width: 64rem) {
   .cards--brief {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
 
+.cards--brief > li:last-child {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 64rem) {
   .cards--brief > li:last-child {
     grid-column: span 2;
   }
@@ -1055,7 +1290,7 @@ select:disabled {
 }
 
 .card__check {
-  color: var(--accent);
+  color: var(--accent-text);
   margin-right: 0.5rem;
 }
 
@@ -1073,7 +1308,7 @@ select:disabled {
   font-family: var(--font-mono);
   font-size: var(--step--2);
   letter-spacing: 0.02em;
-  color: var(--accent);
+  color: var(--accent-text);
   overflow-wrap: anywhere;
 }
 
@@ -1087,9 +1322,13 @@ select:disabled {
 }
 
 /* ==========================================================================
-   Architecture stack
+   Architecture - the layers, then the stack
    ========================================================================== */
 
+/* Both lists in this section share one grid: a 4rem index column, a 15rem
+   name column, and the rest for the note. The stack rows underneath use the
+   same template so their text starts on the same vertical line as the layer
+   notes above - two lists, one ruled column. */
 .stack {
   list-style: none;
   margin: 0;
@@ -1136,6 +1375,69 @@ select:disabled {
   line-height: 1.6;
 }
 
+/* What the layers are built from: a reference block, not a chapter, so it
+   gets a quiet eyebrow and a step-2 heading rather than a section head of
+   its own. Each row is a group name and its facts, set as plain lines in two
+   columns - a spec sheet, not a bulleted list, which the system does not use
+   anywhere. */
+.spec {
+  margin-top: clamp(3rem, 7vh, 4.5rem);
+}
+
+.spec__title {
+  margin: 0.85rem 0 0;
+  font-size: var(--step-2);
+  font-weight: 200;
+  letter-spacing: -0.02em;
+}
+
+.spec__list {
+  margin: clamp(1.5rem, 4vh, 2.25rem) 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.spec__row {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 15rem) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: baseline;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.spec__row dt {
+  grid-column: 1 / 3;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-dim);
+}
+
+.spec__row dd {
+  grid-column: 3;
+  margin: 0;
+}
+
+/* Multi-column rather than a grid: four short facts balance into two columns
+   of two on their own, and collapse to one column with the row below 52rem
+   without a rule for each count. */
+.spec__points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  columns: 2;
+  column-gap: 2rem;
+  color: var(--ink-muted);
+  font-size: var(--step--1);
+  line-height: 1.55;
+}
+
+.spec__points li {
+  break-inside: avoid;
+  padding-block: 0.15rem;
+}
+
 @media (max-width: 52rem) {
   .stack__layer {
     grid-template-columns: 2.5rem minmax(0, 1fr);
@@ -1144,6 +1446,20 @@ select:disabled {
 
   .stack__note {
     grid-column: 2;
+  }
+
+  .spec__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .spec__row dt,
+  .spec__row dd {
+    grid-column: 1;
+  }
+
+  .spec__points {
+    columns: 1;
   }
 }
 
@@ -1157,7 +1473,7 @@ select:disabled {
 }
 
 .footer__inner {
-  max-width: var(--shell);
+  max-width: var(--measure);
   margin: 0 auto;
   display: flex;
   flex-wrap: wrap;
@@ -1176,14 +1492,14 @@ select:disabled {
 }
 
 .footer a:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* ==========================================================================
    Board -> cards below 60rem
    ==========================================================================
    A seven-column table on a phone is a horizontal-scroll trap. Below 60rem
-   each row becomes a labelled block: the th text is repeated through
+   each row becomes a labeled block: the th text is repeated through
    data-label so the association survives the loss of the header row, and the
    real <thead> is hidden from sight but not from the accessibility tree.
 */
@@ -1191,6 +1507,7 @@ select:disabled {
   .board__scroll {
     border: 0;
     overflow-x: visible;
+    background: none;
   }
 
   .board,
@@ -1239,6 +1556,14 @@ select:disabled {
     color: var(--ink-faint);
   }
 
+  /* A grid cell stretches its child by default. The Move controls should
+     stretch (the select grows to fill); a status chip and a History button
+     should keep the width they have in the table, not become full-width bars. */
+  .board td > .badge,
+  .board td > .button--quiet {
+    justify-self: start;
+  }
+
   .row--history > td {
     grid-template-columns: minmax(0, 1fr);
     padding-top: 0.5rem;
@@ -1253,7 +1578,7 @@ select:disabled {
   }
 
   select {
-    min-width: 0;
+    width: auto;
     flex: 1 1 8rem;
   }
 }

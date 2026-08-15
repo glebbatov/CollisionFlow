@@ -1,76 +1,47 @@
 # CollisionFlow
 
-**Repair Status Tracker** — take-home project for Crash Champions.
+**Repair Status Tracker — take-home project for Crash Champions**
+Built by [Gleb Batov](https://batovgleb.com/) · August 2026
 
-A single-page application for moving vehicle repair orders through a collision center's
-workflow. ASP.NET Core 8 Web API + React 19 SPA, shipped as one deployable.
+### ▶ [collisionflow-gb.azurewebsites.net](https://collisionflow-gb.azurewebsites.net)
 
-> **Live demo:** _pending deployment_ · **API reference:** `/swagger`
+A shop-floor board for moving vehicle repair orders through a collision center's workflow.
+ASP.NET Core 8 API, React 19 SPA, Azure SQL behind stored procedures — deployed as a single
+artifact by GitHub Actions on every push.
 
----
+crashchampions.com already lets customers track a repair. This is the counterpart a service
+advisor would work from: the same information, from the inside.
 
-## Contents
-
-- [Scope: what to review](#scope-what-to-review)
-- [Quick start](#quick-start)
-- [The workflow](#the-workflow)
-- [Architecture](#architecture)
-- [Code tour](#code-tour)
-- [Design decisions](#design-decisions)
-- [Testing](#testing)
-- [Assumptions](#assumptions)
-- [AI usage](#ai-usage)
-- [With more time](#with-more-time)
+[batovgleb.com](https://batovgleb.com/) · [LinkedIn](https://www.linkedin.com/in/glebbatov/) ·
+[GitHub](https://github.com/glebbatov) · batov.gleb1@gmail.com
 
 ---
 
-## Scope: what to review
+## What was asked, and where it is
 
-The brief asked for a 1–2 hour exercise. I built that first and tagged it, then kept going
-against the specifics of the job description. Both are in this repository.
-
-| | Assignment scope | Extended |
+| The brief | Delivered | In the code |
 |---|---|---|
-| Git ref | `v1.0-assignment-scope` | `main` |
-| Contains | Repair order list, status updates, workflow validation, unit tests | _(in progress — see Roadmap)_ |
+| A list of repair jobs using mock or sample data | 24 repair orders seeded by a versioned script | `db/002_Seed.sql` |
+| Customer name | ✅ | `dbo.RepairJob.CustomerName` |
+| Vehicle year / make / model | ✅ as a value object, validated | `Vehicle.cs` |
+| Repair center | ✅ as a related table, not a string | `dbo.RepairCenter` |
+| Current status | ✅ with the legal next moves attached | `RepairJobResponse` |
+| Ability to update the status | `PUT /api/repair-jobs/{id}/status` | `RepairJobsController` |
+| Basic validation — only approved statuses | Enforced **three times**, see below | `usp_RepairJob_UpdateStatus` · `RepairJob.ChangeStatus` |
+| C# / .NET | ASP.NET Core 8 | |
+| React | React 19 + TypeScript | |
+| SQL, JSON or in-memory data | All three: Azure SQL primary, in-memory fallback, JSON over the wire | |
 
-If you only have ten minutes, review the tag. I scoped and delivered the ask before
-extending it, and I'd rather show you the additional work than describe it in an interview.
-
-Crash Champions already offers customers repair status tracking on the public site. I built
-this as the shop-side counterpart: the board a service advisor works from.
-
----
-
-## Quick start
-
-Requires the **.NET 8 SDK** and **Node 20+**.
-
-```bash
-# Terminal 1 — API on http://localhost:5210
-dotnet run --project src/CollisionFlow.Api
-
-# Terminal 2 — SPA on http://localhost:5173, proxying /api to the API
-cd src/collisionflow.web
-npm install
-npm run dev
-```
-
-Open <http://localhost:5173>.
-
-To run everything from the API alone, build the SPA into `wwwroot` first:
-
-```bash
-cd src/collisionflow.web && npm run build
-dotnet run --project src/CollisionFlow.Api      # SPA + API together on :5210
-```
+The brief said a production-ready application was not expected. It seemed a better use of the
+exercise to build one anyway, and let the code answer questions the requirements did not ask.
+The commit tagged `v1.0-assignment-scope` is the literal ask, delivered first; everything after
+it is deliberate.
 
 ---
 
-## The workflow
+## The interesting part: where the rules live
 
-Six approved statuses. The transitions between them are **not** a straight line, because
-two shop realities shape the graph:
+The six approved statuses are not a list — they are a graph, and it is not a straight line.
 
 ```
 Received ──▶ In Progress ⇄ Waiting on Parts
@@ -79,363 +50,231 @@ Received ──▶ In Progress ⇄ Waiting on Parts
            Quality Check ──▶ Ready for Pickup ──▶ Completed
 ```
 
-- **Parts holds are reversible.** A job waiting on a back-ordered bumper resumes when the
-  part lands; it does not restart.
-- **Quality Check can fail.** Work that doesn't pass goes back for rework, not forward to
-  the customer. Modeling that loop is the difference between a workflow and a progress bar.
-- **Completed is terminal.** Reopening a closed repair order is a *supplement* in the real
+- **Parts holds are reversible.** A job waiting on a back-ordered bumper resumes when the part
+  lands. It does not restart.
+- **Quality Check can fail.** Work that doesn't pass goes back for rework, not forward to the
+  customer. Modeling that loop is the difference between a workflow and a progress bar.
+- **Completed is terminal.** Reopening a closed repair order is a supplement in the real
   business process, not an edit to history.
-- **`Received → Waiting on Parts` is deliberate.** Parts are frequently ordered before
-  teardown begins.
+- **`Received → Waiting on Parts` exists on purpose.** Parts are often ordered before teardown.
 
-### Where these rules live
-
-The legal transitions are held as a **set of edges**, not as `if` statements — one
-definition with four consumers:
+Those transitions live as **rows in `dbo.StatusTransition`**, not as `if` statements. One
+definition, four consumers:
 
 | Consumer | Uses it to |
 |---|---|
-| `dbo.usp_RepairJob_UpdateStatus` | reject an illegal move inside the transaction |
+| `usp_RepairJob_UpdateStatus` | reject an illegal move inside the transaction |
 | `RepairJob.ChangeStatus` | guarantee the entity can never hold an illegal state |
-| `RepairJobsController` | return a 422 that lists the legal alternatives |
+| `RepairJobsController` | return a 422 that **lists the legal alternatives** |
 | `JobRow.tsx` | render only the options that would succeed |
 
-None of them owns a private copy, so none of them can drift. Adding a status becomes a data
-change rather than a redeploy.
+None owns a private copy, so none can drift. Adding a status becomes a data change rather than
+a deployment — and an invalid option is never in the DOM, while the database still refuses one
+sent by `curl`.
 
 ---
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    B["Browser — React SPA"]
-    A["CollisionFlow.Api<br/>controllers · contracts · composition root"]
-    D["CollisionFlow.Domain<br/>RepairJob · StatusTransitionPolicy · IRepairJobRepository<br/><i>zero dependencies</i>"]
-    I["CollisionFlow.Infrastructure<br/>repository implementations"]
-    S[("Azure SQL<br/>stored procedures")]
-    M["In-memory store<br/>seeded sample data"]
-
-    B -->|"fetch /api"| A
-    A --> D
-    A --> I
-    I -->|implements| D
-    I --> S
-    I -.->|"fallback when SQL is unavailable"| M
+```
+src/CollisionFlow.Domain/          business rules — no package references at all
+src/CollisionFlow.Infrastructure/  storage; implements interfaces the domain declares
+src/CollisionFlow.Api/             HTTP surface + composition root; hosts the built SPA
+src/collisionflow.web/             React + TypeScript, builds into the API's wwwroot
+tests/CollisionFlow.Domain.Tests/  61 tests
+db/                                schema, seed, 5 stored procedures, indexes
 ```
 
-The arrow from `Infrastructure` **to** `Domain` is the point. `IRepairJobRepository` is
-declared in the domain and implemented in infrastructure, so storage depends on the business
-rather than the other way around. `CollisionFlow.Api` is the composition root — the only
-project permitted to know about both sides.
+Dependencies point **inward**. `IRepairJobRepository` is declared in the domain and implemented
+in infrastructure, so storage depends on the business rather than the reverse — which is what
+lets the same API run against Azure SQL in production and a list in memory in a test, with
+neither the controllers nor the domain knowing which.
 
-```
-src/
-  CollisionFlow.Domain/          business rules — no package references at all
-  CollisionFlow.Infrastructure/  storage; implements interfaces the domain declares
-  CollisionFlow.Api/             HTTP surface + composition root; hosts the built SPA
-  collisionflow.web/             React + TypeScript, builds into the API's wwwroot
-tests/
-  CollisionFlow.Domain.Tests/    61 tests, including all 36 status-pair combinations
-db/                              SQL schema, seed and stored procedures
-```
+`CollisionFlow.Domain.csproj` has no `PackageReference` elements. None. That emptiness is the
+design: rules that *cannot* reference infrastructure cannot accidentally depend on it.
 
-### A status change, end to end
+### It degrades honestly
 
-```mermaid
-sequenceDiagram
-    participant U as Service advisor
-    participant W as React SPA
-    participant C as RepairJobsController
-    participant P as StatusTransitionPolicy
-    participant R as IRepairJobRepository
-    participant J as RepairJob
+The deployed database is Azure SQL's free tier, which auto-pauses when idle and takes up to a
+minute to resume. Rather than serve a timeout to someone opening the link the next morning, a
+Polly circuit breaker falls back to the in-memory store and the UI says so plainly.
 
-    U->>W: picks "Ready for Pickup", clicks Update
-    Note over W: the select only ever offered<br/>job.allowedTransitions
-    W->>C: PUT /api/repair-jobs/{id}/status
-    C->>R: GetByIdAsync(id)
-    R-->>C: RepairJob
-    C->>P: IsAllowed(QualityCheck, ReadyForPickup)
-    alt rejected
-        P-->>C: false
-        C-->>W: 422 + allowedTransitions
-        W->>U: explains what IS permitted
-    else permitted
-        P-->>C: true
-        C->>R: UpdateStatusAsync(id, ReadyForPickup)
-        R->>J: ChangeStatus(status, policy, now)
-        Note over J: checks the policy again —<br/>defense in depth, not flow control
-        J-->>R: true
-        R-->>C: updated RepairJob
-        C-->>W: 200 + job with new allowedTransitions
-        W->>U: row updates; aria-live announces the change
-    end
-```
+Two details make that work rather than merely exist:
 
-### Request pipeline
-
-```
-UseExceptionHandler                → DomainException becomes RFC 7807, not a 500
-Swagger (development only)
-UseHttpsRedirection
-UseDefaultFiles / UseStaticFiles   → the built SPA from wwwroot
-MapControllers                     → /api/*
-MapFallbackToFile("index.html")    → client-side routes
-```
-
----
-
-## Code tour
-
-Practices worth pointing at, anchored to real code rather than described in the abstract.
-
-**The domain cannot reach the database.**
-`CollisionFlow.Domain.csproj` has no `PackageReference` elements. None. That emptiness is
-the design: business rules that *cannot* reference infrastructure cannot accidentally depend
-on it.
-
-**Illegal states are unrepresentable, not merely discouraged.**
-`RepairJob.Status` has a private setter, and the only way to change it is `ChangeStatus`,
-which consults the policy first. There is no code path that sets a status without asking,
-because there is no setter to call.
-
-**An enum is not a constraint.**
-`(RepairStatus)99` compiles, casts and assigns without complaint — the type system does not
-enforce enum membership at runtime. `RepairJob.RequireDefinedStatus` calls `Enum.IsDefined`,
-which is what actually enforces "only approved statuses can be used." There's a test named
-after exactly that.
-
-**Two factories, deliberately.**
-`RepairJob.Open()` enforces the rules for *new* work (it always starts at `Received`).
-`Rehydrate()` replays what already happened, so it must accept any status the store
-legitimately holds. Collapsing them would mean either weakening creation or being unable to
-load a finished job.
-
-**Errors that tell you what you *can* do.**
-`RepairJobsController.InvalidTransitionProblem` returns problem details carrying
-`currentStatus`, `requestedStatus` and **`allowedTransitions`**. An error that only says
-"no" forces the client to guess, or to ship its own copy of a rule it doesn't own.
-
-**Idempotency is a design property, not a comment.**
-`ChangeStatus` returns `false` and changes nothing when the requested status equals the
-current one — including leaving `UpdatedUtc` alone, so a no-op never looks like activity in
-the audit trail. That's what makes `PUT` genuinely safe to retry after a dropped connection.
-
-**Time is a dependency.**
-`TimeProvider` is injected rather than `DateTime.UtcNow` being called. Tests control the
-clock instead of sleeping through it, and assert on exact timestamps as a result.
-
-**The wire contract is not the domain model.**
-`Contracts/RepairJobResponse` is a separate shape, mapped by hand in `ContractMappings`. The
-entity can grow private state without changing what clients receive. Mapping is hand-written
-rather than reflection-based: at this size a mapping library buys about thirty lines in
-exchange for a dependency, a startup cost, and a class of failures that only appear at
-runtime. The compiler currently checks every one of those lines.
-
-**Color is never the only signal.**
-Every `StatusBadge` carries a text label plus a decorative, `aria-hidden` glyph. WCAG 1.4.1
-forbids color as the sole carrier of information — and on a status board, the status *is*
-the information. The badge keeps its text on a neutral chip with color only on the left
-rule and glyph, so contrast is identical for all six statuses instead of depending on which
-hue a status happened to draw.
-
-**The UI cannot offer what the server would reject.**
-`JobRow`'s `<select>` is populated from `job.allowedTransitions`, computed server-side. An
-invalid option is never rendered, so it can never be chosen — and the server still rejects
-one if you call the endpoint directly with `curl`. The rule is *enforced* where it belongs
-and merely *reflected* in the UI.
-
-**Feedback a screen reader can hear.**
-A visually-hidden `aria-live="polite"` region announces *"RO-10428 moved to Ready for
-Pickup"* after each change. Without it, a screen reader user gets no indication anything
-happened — the table simply, silently, differs. Errors use `role="alert"` so they interrupt;
-confirmations wait their turn.
+- **A rejected status change does not trip the breaker.** Without that exclusion, a user
+  repeatedly attempting an illegal transition would look like repeated failures, open the
+  circuit, and take the database offline for everyone else — a denial of service shipped by
+  accident. A business rule saying no is a correct answer, not an outage.
+- **A background probe wakes the paused database, but only while degraded.** The request path
+  gives up after five seconds, which can never wake a serverless database — so without the
+  probe the app would degrade once and stay degraded forever. And the free tier allows 100,000
+  vCore-seconds a month; at the 0.5 vCore floor, keeping the database permanently awake would
+  burn a month's allowance in under three days. Waking it on demand costs seconds.
 
 ---
 
 ## Design decisions
 
-Each entry says what it cost, not just what it bought.
+Each says what it **cost**, not just what it bought.
 
-**Three projects, repository interface in the domain.** The dependency points inward, which
-is what lets the same API run against stored procedures in Azure and an in-memory list in a
-test. *Cost:* three projects for an application this size — justified because the seam
-between rules and storage is where this project's interesting work happens.
+**Dapper with stored procedures, not EF Core.** The brief asks for SQL; using EF over stored
+procedures means fighting the abstraction to reach the thing you wanted. Schema ships as
+numbered idempotent scripts embedded in the assembly and applied at startup, so the same files
+a developer runs through `sqlcmd` are the ones CI and Azure apply. *Cost:* no change tracking,
+hand-written result mapping.
 
-**.NET 8, not .NET 10.** Targeting .NET 10 in Visual Studio 2022 17.14 is
-[explicitly unsupported](https://github.com/dotnet/sdk/issues/51678); it needs VS 2026. .NET 8
-also reflects what most enterprise estates run today. *Cost:* .NET 8 and .NET 9 both reach
-end of support on **10 November 2026**, so an upgrade is due within months. It's a
-target-framework change plus a review of `TimeProvider` and `System.Threading.Lock` usage,
-both of which this codebase already uses in their .NET 8 form.
+**Transitions as data, not a `switch`.** One source of truth, four consumers. *Cost:* the
+seeded SQL rows must stay in step with the C# fallback constant — there is a test for it.
 
-**Controllers, not Minimal APIs.** More legible to a team maintaining MVC-shaped code, and
-attribute routing keeps OpenAPI metadata next to the action it describes. *Cost:* more
-ceremony per endpoint.
-
-**Transitions as data, not a `switch`.** One source of truth, four consumers, no drift.
-*Cost:* one more indirection, and the seeded SQL rows must stay in step with the C# constant
-— there's a test that catches divergence.
-
-**`PUT /repair-jobs/{id}/status`, not `POST .../advance`.** A status is a thing that has a
-value, so setting it is naturally idempotent and safe to retry; an RPC-style `advance` gives
-no such guarantee. *Cost:* reads slightly less naturally than a verb.
-
-**Shouldly, not FluentAssertions.** FluentAssertions v8 (January 2025) dropped Apache
-licensing for a commercial Xceed license and is no longer free for commercial use. The
-general principle matters more than the instance: a dependency's license is part of its cost,
-and checking it is cheaper before adoption than after. *Cost:* slightly less expressive
-collection assertions.
-
-**Warnings as errors, configured centrally.** `Directory.Build.props` sets target framework,
-nullability and `TreatWarningsAsErrors` once; individual `.csproj` files declare only what
-differs. This is not decorative — see [AI usage](#ai-usage) for the defect it caught.
-*Cost:* occasional explicit suppression. `CS1591` is suppressed centrally.
+**`PUT` on a `status` sub-resource, not `POST .../advance`.** A status is a thing that has a
+value, so setting it is idempotent and safe to retry after a dropped connection. Re-sending the
+current status returns 200 and writes no audit row. *Cost:* reads less naturally than a verb.
 
 **Illegal transitions rejected twice.** The controller asks first so the caller gets a useful
-422; the entity checks again so the rule holds even if a future code path forgets to ask.
-Defense in depth, not flow control — in normal operation the exception never fires. *Cost:*
-the rule is evaluated twice per request. It's a dictionary lookup.
+422; the entity checks again so the rule holds if a future code path forgets to ask. Defense in
+depth, not flow control. *Cost:* a dictionary lookup per request.
 
-**One deployable, one origin.** Vite builds the SPA into `wwwroot`; the API serves it. One
-artifact, one App Service, and **no CORS configuration to get wrong** — no class of bug that
-appears only in production because the origins differ there. *Cost:* frontend can't be scaled
-or cached independently. At this size that's a feature.
+**Controllers, not minimal APIs.** More legible to a team maintaining MVC-shaped code.
+*Cost:* more ceremony per endpoint.
 
-**Package versions declared centrally.** `Directory.Packages.props` holds every version in
-the solution; project files reference packages without one. Adopted after a real conflict -
-`Microsoft.Data.SqlClient` floors `Microsoft.Extensions.Logging.Abstractions` at 8.0.2 while
-another project had pinned 8.0.0, and `TreatWarningsAsErrors` turned the resulting NU1605
-downgrade warning into a failed build. With versions spread across four project files that is
-a hunt; in one file it is a diff.
+**Shouldly, not FluentAssertions.** FluentAssertions v8 dropped Apache licensing for a
+commercial license in January 2025 and is no longer free for commercial use. A dependency's
+license is part of its cost. *Cost:* slightly less expressive collection assertions.
 
-The grouping in that file encodes a distinction worth being explicit about:
-`Microsoft.Extensions.*` packages ship **inside the ASP.NET Core shared framework**, so
-referencing a newer major replaces a runtime component the runtime was not tested against -
-those are held at `8.0.x`. `Microsoft.Data.SqlClient` is a **standalone library** with its own
-release train and no shared-framework copy, so taking the current supported major is correct
-there. Two packages that look alike, opposite right answers. *Cost:* adding a package is now a
-two-file change.
+**.NET 8, not .NET 10.** Targeting .NET 10 in Visual Studio 2022 17.14 is
+[explicitly unsupported](https://github.com/dotnet/sdk/issues/51678). *Cost:* .NET 8 reaches
+end of support on 10 November 2026, so an upgrade is due — a target-framework change plus a
+review of `TimeProvider` usage, which this codebase already uses in its .NET 8 form.
 
-**Dapper with stored procedures, not EF Core** *(in progress)*. The brief asks for stored
-procedures; using EF over them means fighting the abstraction to reach the thing you wanted.
-Schema ships as numbered idempotent scripts under `db/`, so the database is version-controlled
-without a code-first round trip. *Cost:* no change tracking, no LINQ composition, hand-written
-result mapping.
+**Warnings as errors, versions declared centrally.** `Directory.Build.props` and
+`Directory.Packages.props`. Neither is decorative — see AI usage below for the two defects they
+caught. *Cost:* adding a package is a two-file change.
 
-**Degrade to in-memory rather than fail** *(in progress)*. The deployed database is Azure
-SQL's free tier, which auto-pauses. Rather than serve a 500 to someone opening the link the
-next morning, a circuit breaker falls back to the in-memory repository and the UI says so.
-Degrading *honestly* is the point — silently faking success would be worse than failing.
-*Cost:* two code paths to keep behaviorally consistent, mitigated by a shared interface and
-shared tests.
+**One deployable, one origin.** Vite builds the SPA into `wwwroot`; the API serves it. No CORS
+configuration to get wrong, and no class of bug that appears only in production because the
+origins differ there. *Cost:* the frontend can't be cached independently.
 
 ---
 
 ## Testing
 
 ```bash
-dotnet test
+dotnet test        # 61 tests
 ```
 
-61 tests today. The centerpiece is a `[Theory]` over all **36** ordered status pairs, checked
-against a truth table transcribed by hand from the specification — deliberately *not* derived
-from `StatusTransitionPolicy.DefaultTransitions`.
+The centerpiece is a `[Theory]` over **all 36 ordered status pairs**, checked against a truth
+table transcribed by hand from the specification — deliberately *not* derived from
+`StatusTransitionPolicy.DefaultTransitions`.
 
 A test that reads its expectations from the code under test proves only that the code equals
-itself. This one fails if anyone edits the production workflow, which is the entire point of
-having it.
+itself. This one fails if anyone edits the production workflow, which is the entire point.
+
+Also covered: idempotent no-ops leave `UpdatedUtc` untouched, a completed order cannot be
+reopened, `(RepairStatus)99` is refused even though the cast compiles, and the value object
+rejects implausible input.
+
+---
+
+## Accessibility
+
+WCAG 2.2 AA, treated as a constraint rather than a claim:
+
+- **Status is never conveyed by color alone** (SC 1.4.1). Every badge carries text plus a
+  decorative glyph — on a status board, the status *is* the information. Badge text sits on a
+  neutral chip with color only on the rule and glyph, so contrast is identical for all six
+  statuses rather than depending on which hue a status drew.
+- Changes are announced through an `aria-live` region; errors use `role="alert"`.
+- Every control is a real `<button>` / `<a>` / `<select>`. Expanding an audit trail uses
+  `aria-expanded` and `aria-controls`, so it is a disclosure a screen reader can describe.
+- A 3px focus ring at 3.8:1 against its background (SC 2.4.11), and 24px minimum targets
+  (SC 2.5.8).
+- **Nothing animates** if the system reports `prefers-reduced-motion` — checked in JavaScript
+  before the observer is created, and again in CSS in case scripting fails.
 
 ---
 
 ## Assumptions
 
-1. **Workflow shape.** The brief listed six statuses but not which transitions are legal. I
-   modeled the graph above from how collision repair actually sequences, rather than
-   allowing any status to become any other.
-2. **No authentication.** Out of scope for the exercise. In production, status changes would
-   be authorized per repair center and attributed to a named user — the audit trail is
-   designed for it.
-3. **Repair center is a label, not an entity.** Sufficient here; it becomes a table with the
-   SQL schema.
-4. **Single tenant, single region.** No multi-brand or franchise partitioning.
-5. **Timestamps are UTC** everywhere, formatted client-side. A network spanning 37 states
-   cannot store local time.
+1. **Workflow shape.** The brief listed six statuses but not which transitions are legal. The
+   graph above is modeled on how collision repair actually sequences, rather than allowing any
+   status to become any other.
+2. **No authentication.** Out of scope for the exercise. In production, status changes would be
+   authorized per repair center and attributed to a named user — the audit trail is designed
+   for it.
+3. **Single tenant, single region.** No multi-brand or franchise partitioning.
+4. **Timestamps are UTC**, formatted client-side. A network spanning 37 states cannot store
+   local time.
 
 ---
 
 ## AI usage
 
-The brief invited AI use and asked what it was used for and what was reviewed manually.
+**What I used.** Claude, as a pair-programming assistant, throughout implementation: writing
+implementation code from my direction, drafting test bodies once I had specified what needed
+proving, verifying current platform facts I would otherwise have assumed (the Azure SQL
+free-tier CLI flags, the FluentAssertions license change, GitHub's April 2026 move to immutable
+OIDC subject claims), and first drafts of this document.
 
-**What I used:** Claude, as a pair-programming assistant, throughout implementation. It wrote
-most of the implementation code from my direction — domain types, repository, controllers,
-React components, CSS — drafted test bodies once I specified what needed proving, and
-produced first drafts of this document.
+**What I reviewed and modified.** I read every file as it landed rather than after the fact, and
+built and ran the application at each step — the domain model and status mapping, the REST API,
+the infrastructure and repository layer, the React SPA, the tests and sample data, the SQL
+schema, procedures and scripts, the data-source reporting, and the Azure and CI/CD setup.
 
-**What I decided.** Every entry under [Design decisions](#design-decisions) is mine, and each
-has a rationale I can defend without notes. I also specified the workflow graph itself —
-including the Quality Check rework loop and the reversible parts hold — from how collision
-repair actually sequences. That's domain judgment, not something a model supplied.
+**What I decided.** Every entry under Design decisions. I also specified the workflow graph
+itself, including the Quality Check rework loop and the reversible parts hold, from how
+collision repair sequences. That is domain judgment, not something a model supplied.
 
-**What it got wrong, and how it was caught.** The generated `StatusTransitionPolicy` declared:
+**Three things it got wrong, and how they were caught.**
 
-```csharp
-public static StatusTransitionPolicy Default { get; } = new(DefaultTransitions);       // first
-public static IReadOnlyList<StatusTransition> DefaultTransitions { get; } = [ ... ];   // second
+1. **A static initialization-order bug.** The generated `StatusTransitionPolicy` declared
+   `Default` *before* the list it was built from. C# runs static initializers in textual order,
+   so `Default` would have been constructed from a null list — every request touching the
+   policy, which is every request, throwing `NullReferenceException`. The compiler flagged it as
+   `CS8604`; in a build with forty other warnings that scrolls past. Because
+   `TreatWarningsAsErrors` was on from the start, it stopped the build instead.
+2. **A dependency three majors ahead of the runtime.** `dotnet add package` resolved
+   `Microsoft.Extensions.DependencyInjection.Abstractions` to 10.0.11 inside a `net8.0` project.
+   It builds — but ASP.NET Core 8's shared framework already ships 8.x of that assembly, so the
+   reference would override a runtime component. Pinned back, and the whole solution moved to
+   central package management after a related conflict.
+3. **A SQL Server trap.** Filtered indexes require `QUOTED_IDENTIFIER ON`, and a stored
+   procedure captures that setting permanently at `CREATE` time. `sqlcmd` connects with it OFF
+   while SSMS connects with it ON — so the procedures would have worked perfectly when tested by
+   hand and failed at runtime once the filtered index existed. Fixed by putting the SET options
+   inside the scripts, where they belong.
+
+---
+
+## What I would improve with additional time
+
+I'd add integration tests exercising the stored procedures against a real SQL Server in CI —
+the workflow rules are enforced in the database, and only the C# half of that is currently
+covered by automated tests. I'd finish the optimistic concurrency the schema already supports:
+`RowVersion` is stored and returned by every read but not yet enforced through an `If-Match`
+header, so two service advisors editing the same repair order is still last-write-wins. And I'd
+add authentication with authorization scoped to repair center, since a technician at one
+location shouldn't be able to move another location's work.
+
+---
+
+## Run it locally
+
+Requires the **.NET 8 SDK** and **Node 20+**. No SQL Server needed — with no connection string
+the app runs entirely on its in-memory store.
+
+```bash
+git clone https://github.com/glebbatov/CollisionFlow.git
+cd CollisionFlow
+
+# build the SPA into the API's wwwroot
+cd src/collisionflow.web && npm install && npm run build && cd ../..
+
+dotnet run --project src/CollisionFlow.Api      # http://localhost:5210
 ```
 
-C# runs static initializers in **textual order**, so `Default` would have been constructed
-from a still-null list. Every request touching the policy — which is every request — would
-have thrown `NullReferenceException`, and the unit tests would have failed pointing at
-entirely the wrong place.
+To run against SQL Server, set a connection string in
+`src/CollisionFlow.Api/appsettings.Development.json`; the schema, seed data and stored
+procedures are applied automatically at startup.
 
-The compiler flagged it as `CS8604 Possible null reference argument`. In a build with forty
-other warnings, that scrolls past. Because `TreatWarningsAsErrors` was enabled at the outset,
-it stopped the build instead. The fix was to declare `DefaultTransitions` first, with a
-comment explaining why the order is load-bearing.
-
-Separately, `dotnet add package` resolved
-`Microsoft.Extensions.DependencyInjection.Abstractions` to **10.0.11** inside a `net8.0`
-project. It restores and builds — but ASP.NET Core 8's shared framework already ships 8.x of
-that assembly, so the reference would override a framework component with a version two
-releases later. I pinned it to `8.0.2`.
-
-**How I reviewed it.** Every change was compiled and run locally before being committed, and
-I read the code as it landed rather than after the fact. Both defects above were caught inside
-that loop — the first by build configuration I chose deliberately, the second by reading
-restore output rather than assuming a successful build meant a correct one.
-
-The distinction I'd draw: AI accelerated the typing, not the judgment. The parts of this
-project worth assessing me on — the workflow model, the layering, the concurrency approach,
-the accessibility decisions — are the parts I specified.
-
----
-
-## With more time
-
-I'd add authentication with authorization scoped to repair center — a technician at one
-location shouldn't see or move another location's orders. I'd publish status changes through
-an outbox table so downstream systems (customer notifications, DRP partners) consume them
-reliably instead of polling. And I'd add load testing plus a keyset pagination path, since
-`OFFSET`/`FETCH` degrades once a location accumulates tens of thousands of historical repair
-orders.
-
----
-
-<!-- ROADMAP: remove this section before submitting -->
-## Roadmap (work in progress)
-
-- [x] Domain model, workflow policy, in-memory repository
-- [x] REST API with RFC 7807 problem responses
-- [x] React SPA with server-driven status options
-- [x] 61 domain unit tests
-- [ ] SQL schema, seed and stored procedures
-- [ ] Dapper repository + resilient fallback
-- [ ] API hardening: versioning, ETag concurrency, rate limiting, security headers
-- [ ] Full UI pass
-- [ ] WCAG 2.2 AA audit with axe gates in CI
-- [ ] Real-time updates via SignalR
-- [ ] Azure deployment + GitHub Actions CI/CD
-- [ ] Playwright end-to-end tests
+For frontend work, run `npm run dev` in `src/collisionflow.web` alongside the API and use
+<http://localhost:5173> for hot reload.

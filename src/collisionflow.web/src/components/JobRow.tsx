@@ -26,16 +26,28 @@ export function JobRow({ job, labelFor, isSaving, onUpdate }: Props) {
         gone, so CSS draws the label from this attribute instead — the
         heading and its value stay adjacent at every width, and the real
         <thead> stays in the accessibility tree either way.
+
+        The vehicle and the center appear twice: once in their own column and
+        once as a second line under the customer and the RO number. Only one
+        copy is ever displayed — at laptop widths the columns fold and the
+        second lines show; everywhere else it is the other way round — so
+        assistive technology never meets both.
       */}
       <tr>
         <td className="cell--mono" data-label="RO #">
           {job.jobNumber}
+          <span className="cell__sub">{job.repairCenter}</span>
         </td>
         <td className="cell--name" data-label="Customer">
           {job.customerName}
+          <span className="cell__sub">{job.vehicleDescription}</span>
         </td>
-        <td data-label="Vehicle">{job.vehicleDescription}</td>
-        <td data-label="Center">{job.repairCenter}</td>
+        <td className="col--vehicle" data-label="Vehicle">
+          {job.vehicleDescription}
+        </td>
+        <td className="col--center" data-label="Center">
+          {job.repairCenter}
+        </td>
         <td data-label="Status">
           <StatusBadge status={job.status} label={job.statusDisplayName} />
         </td>
