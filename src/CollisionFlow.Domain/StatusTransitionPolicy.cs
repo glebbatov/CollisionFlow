@@ -6,7 +6,7 @@ namespace CollisionFlow.Domain;
 /// <remarks>
 /// <para>
 /// The graph is intentionally not a straight line. Two real-world shop
-/// behaviours shape it:
+/// behaviors shape it:
 /// </para>
 /// <list type="bullet">
 ///   <item><description>
@@ -15,7 +15,7 @@ namespace CollisionFlow.Domain;
 ///   </description></item>
 ///   <item><description>
 ///     <b>Quality Check can fail.</b> A job that does not pass QC goes back to
-///     In Progress for rework rather than forward to the customer. Modelling this
+///     In Progress for rework rather than forward to the customer. Modeling this
 ///     rework loop is the difference between a workflow and a progress bar.
 ///   </description></item>
 /// </list>
@@ -47,7 +47,7 @@ public sealed class StatusTransitionPolicy : IStatusTransitionPolicy
     /// so the in-memory and SQL-backed policies cannot disagree.
     /// </summary>
     /// <remarks>
-    /// Declared before <see cref="Default"/> deliberately. Static initialisers run in
+    /// Declared before <see cref="Default"/> deliberately. Static initializers run in
     /// textual order, so a <see cref="Default"/> declared first would be constructed
     /// from a still-null list and throw on first use.
     /// </remarks>

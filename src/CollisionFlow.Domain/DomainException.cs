@@ -20,7 +20,7 @@ public abstract class DomainException : Exception
 /// In normal operation the API rejects the request before this can fire - the
 /// caller gets a 422 listing the transitions that <i>are</i> legal. This exception
 /// is the layer beneath that: it guarantees the rule holds even if a future code
-/// path forgets to ask first. Defence in depth, not flow control.
+/// path forgets to ask first. Defense in depth, not flow control.
 /// </remarks>
 public sealed class InvalidStatusTransitionException : DomainException
 {

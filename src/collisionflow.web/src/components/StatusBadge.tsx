@@ -2,7 +2,7 @@ import type { RepairStatus } from '../types'
 
 /**
  * Decorative glyphs. Every badge also carries its text label, because
- * WCAG 1.4.1 forbids using colour as the only way to convey information -
+ * WCAG 1.4.1 forbids using color as the only way to convey information -
  * and on a status board, the status IS the information.
  */
 const GLYPH: Record<RepairStatus, string> = {

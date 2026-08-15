@@ -5,7 +5,7 @@ namespace CollisionFlow.Api.Contracts;
 /// <summary>What the API returns for a repair order.</summary>
 /// <remarks>
 /// A separate shape from the domain entity on purpose. The entity is free to grow
-/// private state and behaviour without changing the wire contract, and nothing
+/// private state and behavior without changing the wire contract, and nothing
 /// internal leaks to a client simply because someone added a property.
 /// </remarks>
 public sealed record RepairJobResponse

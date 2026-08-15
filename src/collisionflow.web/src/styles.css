@@ -1,5 +1,5 @@
 /*
-  Design tokens live in one place so colour, spacing and type stay consistent
+  Design tokens live in one place so color, spacing and type stay consistent
   as the UI grows. The palette is deliberately dark - a shop floor board read
   under fluorescent light, not a marketing page.
 */
@@ -169,7 +169,7 @@ main {
 }
 
 /*
-  The badge keeps its text on a neutral chip and uses colour only on the rule
+  The badge keeps its text on a neutral chip and uses color only on the rule
   and the glyph. Contrast is therefore identical for every status, instead of
   depending on which hue a status happens to have.
 */
@@ -224,7 +224,7 @@ select:disabled {
 }
 
 
-/* Per-status accents. Colour is reinforcement only - every badge and tile
+/* Per-status accents. Color is reinforcement only - every badge and tile
    also carries its text label. */
 .badge--Received { border-left-color: var(--status-Received); }
 .badge--Received .badge__glyph { color: var(--status-Received); }

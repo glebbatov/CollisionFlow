@@ -50,14 +50,14 @@ public sealed class RepairJobsController : ControllerBase
     /// Moves a repair order to a new status.
     /// </summary>
     /// <remarks>
-    /// Modelled as a PUT against the job's <c>status</c> sub-resource rather than an
+    /// Modeled as a PUT against the job's <c>status</c> sub-resource rather than an
     /// RPC-style "advance" call. The status is a thing that has a value, so setting
     /// it is naturally idempotent: sending the status a job is already in succeeds
     /// and changes nothing, which means a retried request after a dropped connection
     /// is safe.
     /// </remarks>
     /// <response code="200">The repair order, with its new status and newly available transitions.</response>
-    /// <response code="400">The body was missing, or the status was not a recognised name.</response>
+    /// <response code="400">The body was missing, or the status was not a recognized name.</response>
     /// <response code="404">No repair order with that id.</response>
     /// <response code="422">The status exists, but the workflow does not allow this move.</response>
     [HttpPut("{id:guid}/status")]
