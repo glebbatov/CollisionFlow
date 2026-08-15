@@ -1,0 +1,115 @@
+name: CI/CD
+
+# Build and test every push and pull request; deploy only what lands on main.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  # Change this to match the App Service name created during provisioning.
+  AZURE_WEBAPP_NAME: collisionflow-gb
+  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '20.x'
+
+permissions:
+  # Required for OIDC. The workflow requests a short-lived token from GitHub and
+  # exchanges it with Entra ID, so there is no publish profile or client secret
+  # stored in this repository to leak or rotate.
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: src/collisionflow.web/package-lock.json
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=results.trx"
+
+      # The SPA has to be built before publish: vite writes into the API's wwwroot,
+      # and dotnet publish only packages what is on disk when it runs.
+      - name: Install web dependencies
+        working-directory: src/collisionflow.web
+        run: npm ci
+
+      - name: Build web
+        working-directory: src/collisionflow.web
+        run: npm run build
+
+      - name: Publish
+        run: dotnet publish src/CollisionFlow.Api --configuration Release --no-build --output ./publish
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: ./publish
+
+  deploy:
+    name: Deploy to Azure
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://${{ vars.AZURE_WEBAPP_NAME || 'collisionflow-gb' }}.azurewebsites.net
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: app
+          path: ./publish
+
+      - name: Sign in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ./publish
+
+      # A deployment that reports success while the site returns 500 is not a
+      # deployment. This asks the running app which data source it is using, which
+      # exercises the whole stack rather than just checking that a port is open.
+      #
+      # Retried, because the Free tier has no Always On: the first request after a
+      # deploy pays a cold start of ten to twenty seconds.
+      - name: Smoke test
+        run: |
+          URL="https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/api/system/status"
+          for attempt in $(seq 1 10); do
+            echo "Attempt $attempt: $URL"
+            if RESPONSE=$(curl -fsS --max-time 30 "$URL"); then
+              echo "$RESPONSE"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "The application did not respond after the deployment."
+          exit 1

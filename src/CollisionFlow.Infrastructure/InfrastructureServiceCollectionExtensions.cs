@@ -52,7 +52,11 @@ public static class InfrastructureServiceCollectionExtensions
             services.TryAddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
             services.TryAddSingleton<SqlScriptRunner>();
             services.TryAddSingleton<SqlWorkflowLoader>();
-            services.AddHostedService<DatabaseStartupTask>();
+            services.AddHostedService<DatabaseInitializer>();
+
+            // Wakes a paused serverless database, but only while the application is
+            // already degraded - see DatabaseWakeupService for why that restraint matters.
+            services.AddHostedService<DatabaseWakeupService>();
 
             // Both concrete repositories are registered, and the decorator is what the
             // application resolves. Nothing above this line knows there are two.
