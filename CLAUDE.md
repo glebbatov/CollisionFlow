@@ -37,7 +37,12 @@ cd src/collisionflow.web && npm run dev             # http://localhost:5173
 cd src/collisionflow.web && npm run build           # builds into the API's wwwroot
 ```
 
-If a build fails with a file lock, an old `CollisionFlow.Api` process is still running.
+A build failing with `MSB3027 / file is locked by CollisionFlow.Api.exe` means a previous
+`dotnet run` is still alive - Ctrl+C does not always kill the apphost. Stop it first:
+
+```powershell
+Get-Process CollisionFlow.Api -EA 0 | Stop-Process -Force; dotnet build
+```
 
 ## Structure
 
@@ -60,8 +65,14 @@ db/                                numbered idempotent SQL scripts
 - **`TreatWarningsAsErrors` stays on.** It has already caught a real static-initialization bug.
 - **Target `net8.0`.** VS 2022 17.14 cannot target .NET 10. Do not "helpfully" upgrade.
 - **Shouldly, not FluentAssertions** (v8 dropped its Apache license).
-- **Pin package versions to `8.0.x`** for `Microsoft.Extensions.*` — `dotnet add package`
-  defaults to 10.x, which overrides the shared framework.
+- **All package versions live in `Directory.Packages.props`.** Central package management is
+  on, so `<PackageReference>` elements carry no `Version` attribute, and
+  `dotnet add package X --version N` writes into that file instead. Never reintroduce a
+  version into a `.csproj`.
+- **`Microsoft.Extensions.*` stay on `8.0.x`.** They ship inside the ASP.NET Core shared
+  framework, so a newer major replaces a runtime component. Standalone libraries with their
+  own release trains (`Microsoft.Data.SqlClient`, Dapper) take the current supported version.
+  Watch transitive floors: SqlClient requires `Logging.Abstractions >= 8.0.2`.
 
 ## The workflow graph — get this right
 

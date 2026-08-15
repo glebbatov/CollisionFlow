@@ -303,6 +303,21 @@ artifact, one App Service, and **no CORS configuration to get wrong** — no cla
 appears only in production because the origins differ there. *Cost:* frontend can't be scaled
 or cached independently. At this size that's a feature.
 
+**Package versions declared centrally.** `Directory.Packages.props` holds every version in
+the solution; project files reference packages without one. Adopted after a real conflict -
+`Microsoft.Data.SqlClient` floors `Microsoft.Extensions.Logging.Abstractions` at 8.0.2 while
+another project had pinned 8.0.0, and `TreatWarningsAsErrors` turned the resulting NU1605
+downgrade warning into a failed build. With versions spread across four project files that is
+a hunt; in one file it is a diff.
+
+The grouping in that file encodes a distinction worth being explicit about:
+`Microsoft.Extensions.*` packages ship **inside the ASP.NET Core shared framework**, so
+referencing a newer major replaces a runtime component the runtime was not tested against -
+those are held at `8.0.x`. `Microsoft.Data.SqlClient` is a **standalone library** with its own
+release train and no shared-framework copy, so taking the current supported major is correct
+there. Two packages that look alike, opposite right answers. *Cost:* adding a package is now a
+two-file change.
+
 **Dapper with stored procedures, not EF Core** *(in progress)*. The brief asks for stored
 procedures; using EF over them means fighting the abstraction to reach the thing you wanted.
 Schema ships as numbered idempotent scripts under `db/`, so the database is version-controlled

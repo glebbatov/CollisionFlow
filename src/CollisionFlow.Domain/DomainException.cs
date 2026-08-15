@@ -32,7 +32,18 @@ public sealed class InvalidStatusTransitionException : DomainException
         To = to;
     }
 
-    public RepairStatus From { get; }
+    /// <summary>
+    /// Used when the database rejected the move. The stored procedure composes its own
+    /// message from the status table, so it is the authority on the wording - repeating
+    /// the lookup here would risk the two disagreeing.
+    /// </summary>
+    public InvalidStatusTransitionException(string message) : base(message)
+    {
+    }
 
-    public RepairStatus To { get; }
+    /// <summary>The status moved from, when known. Null when the database raised the error.</summary>
+    public RepairStatus? From { get; }
+
+    /// <summary>The status moved to, when known. Null when the database raised the error.</summary>
+    public RepairStatus? To { get; }
 }

@@ -45,3 +45,10 @@ export interface ProblemDetails {
   allowedTransitions?: RepairStatus[]
   traceId?: string
 }
+
+export interface SystemStatus {
+  dataSource: 'Database' | 'InMemory'
+  isDegraded: boolean
+  message: string | null
+  since: string
+}

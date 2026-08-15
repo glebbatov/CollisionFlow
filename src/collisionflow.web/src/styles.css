@@ -244,3 +244,14 @@ select:disabled {
 .badge--Completed { border-left-color: var(--status-Completed); }
 .badge--Completed .badge__glyph { color: var(--status-Completed); }
 .tally__item--Completed { border-top-color: var(--status-Completed); }
+
+/* Degraded-mode notice. Amber rather than red: this is a condition, not a failure -
+   the board still works, it just is not backed by the real database. */
+.banner {
+  border-left: 4px solid var(--status-WaitingOnParts);
+  background: var(--surface-raised);
+  color: var(--ink);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1.25rem;
+}

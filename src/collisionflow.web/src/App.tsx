@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ApiError, api } from './api/client'
 import { JobRow } from './components/JobRow'
-import type { RepairJob, RepairStatus, RepairStatusInfo } from './types'
+import { DataSourceBanner } from './components/DataSourceBanner'
+import type { RepairJob, RepairStatus, RepairStatusInfo, SystemStatus } from './types'
 
 export default function App() {
   const [jobs, setJobs] = useState<RepairJob[] | null>(null)
@@ -9,19 +10,22 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [announcement, setAnnouncement] = useState('')
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null)
 
   useEffect(() => {
     let cancelled = false
 
     async function load() {
       try {
-        const [loadedJobs, loadedStatuses] = await Promise.all([
+        const [loadedJobs, loadedStatuses, loadedSystem] = await Promise.all([
           api.getRepairJobs(),
           api.getStatuses(),
+          api.getSystemStatus(),
         ])
         if (!cancelled) {
           setJobs(loadedJobs)
           setStatuses(loadedStatuses)
+          setSystemStatus(loadedSystem)
         }
       } catch (caught) {
         if (!cancelled) {
@@ -31,8 +35,26 @@ export default function App() {
     }
 
     void load()
+
+    // The database recovers on its own once it has finished waking, so the banner has to
+    // be able to disappear without the user reloading. Thirty seconds is frequent enough
+    // to feel automatic and rare enough to be invisible in the request log.
+    const poll = setInterval(() => {
+      api.getSystemStatus().then(
+        (next) => {
+          if (!cancelled) {
+            setSystemStatus(next)
+          }
+        },
+        () => {
+          // A failed status check is not worth surfacing; the next one will tell us.
+        },
+      )
+    }, 30_000)
+
     return () => {
       cancelled = true
+      clearInterval(poll)
     }
   }, [])
 
@@ -57,6 +79,10 @@ export default function App() {
       const updated = await api.updateStatus(job.id, next)
       setJobs((current) => current?.map((j) => (j.id === updated.id ? updated : j)) ?? null)
       setAnnouncement(`${updated.jobNumber} moved to ${updated.statusDisplayName}.`)
+
+      // A write is the moment the store actually matters, so re-check immediately rather
+      // than waiting for the poll to catch up.
+      void api.getSystemStatus().then(setSystemStatus, () => undefined)
     } catch (caught) {
       // The server's 422 carries the transitions that WOULD have been legal,
       // so a rejection can explain itself instead of just saying no.
@@ -89,6 +115,8 @@ export default function App() {
         <p className="visually-hidden" aria-live="polite">
           {announcement}
         </p>
+
+        <DataSourceBanner status={systemStatus} />
 
         {error && (
           <p className="alert" role="alert">

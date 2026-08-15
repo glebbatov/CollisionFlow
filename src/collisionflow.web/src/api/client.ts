@@ -1,4 +1,4 @@
-import type { ProblemDetails, RepairJob, RepairStatus, RepairStatusInfo } from '../types'
+import type { ProblemDetails, RepairJob, RepairStatus, RepairStatusInfo, SystemStatus } from '../types'
 
 /**
  * Carries the server's problem document rather than flattening it to a string,
@@ -38,6 +38,8 @@ export const api = {
   getRepairJobs: () => request<RepairJob[]>('/repair-jobs'),
 
   getStatuses: () => request<RepairStatusInfo[]>('/statuses'),
+
+  getSystemStatus: () => request<SystemStatus>('/system/status'),
 
   updateStatus: (id: string, status: RepairStatus) =>
     request<RepairJob>(`/repair-jobs/${id}/status`, {
