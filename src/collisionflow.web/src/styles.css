@@ -491,12 +491,22 @@ code {
    Hero
    ========================================================================== */
 
+/* Full-bleed, with the content re-centered inside - the same shape as an alt
+   section - because the bloom is painted on this box. Measured against the
+   shell instead, it stopped dead at the shell's left edge on any screen wider
+   than 96rem: a soft wash with a hard vertical cut. Painted on a box as wide
+   as the viewport, the only clipping happens at the viewport's own edge,
+   where there is nothing to see it. */
 .hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero__inner {
   position: relative;
   max-width: var(--shell);
   margin: 0 auto;
   padding: clamp(3.5rem, 9vh, 7rem) var(--gutter) clamp(2.5rem, 6vh, 4.5rem);
-  overflow: hidden;
 }
 
 /* A single soft bloom behind the headline, in the accent at a whisper. It is
@@ -514,10 +524,6 @@ code {
     transparent 70%
   );
   pointer-events: none;
-}
-
-.hero > * {
-  position: relative;
 }
 
 .hero__headline {

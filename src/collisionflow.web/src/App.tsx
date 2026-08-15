@@ -184,43 +184,48 @@ export default function App() {
           {announcement}
         </p>
 
+        {/* Full-bleed section, centered inner: the background bloom is painted on the
+            outer box so that on a screen wider than the shell it reaches the edge of
+            the window instead of stopping at the edge of the content. */}
         <section className="hero" aria-labelledby="hero-heading">
-          <Eyebrow>Collision repair · shop floor</Eyebrow>
-          <h2 className="hero__headline" id="hero-heading">
-            Every repair order, <em>from the inside.</em>
-          </h2>
-          <p className="hero__lead">
-            The status board a service advisor works from. The workflow is not written in this
-            page, or in the API — it is rows in a table, and the database refuses an illegal
-            move even when the request never touches this code.
-          </p>
+          <div className="hero__inner">
+            <Eyebrow>Collision repair · shop floor</Eyebrow>
+            <h2 className="hero__headline" id="hero-heading">
+              Every repair order, <em>from the inside.</em>
+            </h2>
+            <p className="hero__lead">
+              The status board a service advisor works from. The workflow is not written in
+              this page, or in the API — it is rows in a table, and the database refuses an
+              illegal move even when the request never touches this code.
+            </p>
 
-          <Byline />
+            <Byline />
 
-          <ul className="hero__meta">
-            <li>
-              <span className="hero__meta-label">Open orders</span>
-              <span className="hero__meta-value">
-                {jobs === null ? '—' : String(openOrders).padStart(2, '0')}
-              </span>
-            </li>
-            <li>
-              <span className="hero__meta-label">In the shop</span>
-              <span className="hero__meta-value">
-                {jobs === null ? '—' : String(jobs.length).padStart(2, '0')}
-              </span>
-            </li>
-            <li>
-              <span className="hero__meta-label">Workflow states</span>
-              <span className="hero__meta-value">
-                {statuses.length === 0 ? '—' : String(statuses.length).padStart(2, '0')}
-              </span>
-            </li>
-            <li>
-              <span className="hero__meta-label">Serving from</span>
-              <span className="hero__meta-value">{live ? 'Azure SQL' : 'In-memory'}</span>
-            </li>
-          </ul>
+            <ul className="hero__meta">
+              <li>
+                <span className="hero__meta-label">Open orders</span>
+                <span className="hero__meta-value">
+                  {jobs === null ? '—' : String(openOrders).padStart(2, '0')}
+                </span>
+              </li>
+              <li>
+                <span className="hero__meta-label">In the shop</span>
+                <span className="hero__meta-value">
+                  {jobs === null ? '—' : String(jobs.length).padStart(2, '0')}
+                </span>
+              </li>
+              <li>
+                <span className="hero__meta-label">Workflow states</span>
+                <span className="hero__meta-value">
+                  {statuses.length === 0 ? '—' : String(statuses.length).padStart(2, '0')}
+                </span>
+              </li>
+              <li>
+                <span className="hero__meta-label">Serving from</span>
+                <span className="hero__meta-value">{live ? 'Azure SQL' : 'In-memory'}</span>
+              </li>
+            </ul>
+          </div>
         </section>
 
         <section className="section section--board" id="board" aria-labelledby="board-heading">
