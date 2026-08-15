@@ -16,6 +16,7 @@ namespace CollisionFlow.Infrastructure.Repositories;
 public sealed class InMemoryRepairJobRepository : IRepairJobRepository
 {
     private readonly ConcurrentDictionary<Guid, RepairJob> _jobs;
+    private readonly ConcurrentDictionary<Guid, List<StatusChange>> _history = new();
     private readonly IStatusTransitionPolicy _policy;
     private readonly TimeProvider _clock;
     private readonly object _writeGate = new();
@@ -52,6 +53,23 @@ public sealed class InMemoryRepairJobRepository : IRepairJobRepository
     }
 
     /// <inheritdoc />
+    public Task<IReadOnlyList<StatusChange>> GetStatusHistoryAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        lock (_writeGate)
+        {
+            IReadOnlyList<StatusChange> history = _history.TryGetValue(id, out var changes)
+                ? changes.OrderByDescending(c => c.ChangedUtc).ToArray()
+                : [];
+
+            return Task.FromResult(history);
+        }
+    }
+
+    /// <inheritdoc />
     public Task<RepairJob?> UpdateStatusAsync(
         Guid id,
         RepairStatus newStatus,
@@ -70,7 +88,20 @@ public sealed class InMemoryRepairJobRepository : IRepairJobRepository
                 return Task.FromResult<RepairJob?>(null);
             }
 
-            job.ChangeStatus(newStatus, _policy, _clock.GetUtcNow());
+            var from = job.Status;
+
+            if (job.ChangeStatus(newStatus, _policy, _clock.GetUtcNow()))
+            {
+                // Recorded only on an actual change, matching the stored procedure:
+                // re-sending the current status is a no-op, and a no-op is not activity.
+                _history.GetOrAdd(id, _ => []).Add(new StatusChange(
+                    From: from,
+                    To: newStatus,
+                    ChangedUtc: _clock.GetUtcNow(),
+                    ChangedBy: "demo",
+                    Note: null));
+            }
+
             return Task.FromResult<RepairJob?>(job);
         }
     }

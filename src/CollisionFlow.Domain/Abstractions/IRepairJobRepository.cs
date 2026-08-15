@@ -27,4 +27,9 @@ public interface IRepairJobRepository
         Guid id,
         RepairStatus newStatus,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Every recorded status change for a repair order, newest first.</summary>
+    Task<IReadOnlyList<StatusChange>> GetStatusHistoryAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
 }

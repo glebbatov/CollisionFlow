@@ -33,6 +33,22 @@ internal static class ContractMappings
         };
     }
 
+    public static StatusChangeResponse ToResponse(this StatusChange change)
+    {
+        ArgumentNullException.ThrowIfNull(change);
+
+        return new StatusChangeResponse
+        {
+            From = change.From,
+            FromDisplayName = RepairStatusInfo.DisplayName(change.From),
+            To = change.To,
+            ToDisplayName = RepairStatusInfo.DisplayName(change.To),
+            ChangedUtc = change.ChangedUtc,
+            ChangedBy = change.ChangedBy,
+            Note = change.Note,
+        };
+    }
+
     public static RepairStatusResponse ToResponse(this RepairStatus status, IStatusTransitionPolicy policy)
     {
         ArgumentNullException.ThrowIfNull(policy);

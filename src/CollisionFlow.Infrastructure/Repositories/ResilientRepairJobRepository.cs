@@ -89,6 +89,16 @@ public sealed class ResilientRepairJobRepository : IRepairJobRepository
             ct => _fallback.UpdateStatusAsync(id, newStatus, ct),
             cancellationToken);
 
+    /// <inheritdoc />
+    public Task<IReadOnlyList<StatusChange>> GetStatusHistoryAsync(
+        Guid id,
+        CancellationToken cancellationToken = default) =>
+        ExecuteAsync(
+            nameof(GetStatusHistoryAsync),
+            ct => _database.GetStatusHistoryAsync(id, ct),
+            ct => _fallback.GetStatusHistoryAsync(id, ct),
+            cancellationToken);
+
     private async Task<T> ExecuteAsync<T>(
         string operation,
         Func<CancellationToken, Task<T>> onDatabase,

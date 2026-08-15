@@ -1,5 +1,25 @@
-@CollisionFlow_HostAddress = http://localhost:5210
+@host = http://localhost:5210
 
-### Health probe
-GET {{CollisionFlow_HostAddress}}/health/live
-Accept: application/json
+### Which store is answering right now
+GET {{host}}/api/system/status
+
+### The board
+GET {{host}}/api/repair-jobs
+
+### The workflow: statuses and the legal moves between them
+GET {{host}}/api/statuses
+
+### Audit trail for one repair order (replace the id from the list above)
+GET {{host}}/api/repair-jobs/00000000-0000-0000-0000-000000000000/history
+
+### A legal move
+PUT {{host}}/api/repair-jobs/00000000-0000-0000-0000-000000000000/status
+Content-Type: application/json
+
+{ "status": "InProgress" }
+
+### An illegal move - expect 422 with an allowedTransitions array
+PUT {{host}}/api/repair-jobs/00000000-0000-0000-0000-000000000000/status
+Content-Type: application/json
+
+{ "status": "Completed" }

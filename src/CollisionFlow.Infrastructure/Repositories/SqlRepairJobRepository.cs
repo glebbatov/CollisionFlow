@@ -55,6 +55,23 @@ public sealed class SqlRepairJobRepository : IRepairJobRepository
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<StatusChange>> GetStatusHistoryAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = _connections.Create();
+
+        var rows = await connection.QueryAsync<StatusChangeRow>(
+            new CommandDefinition(
+                "dbo.usp_RepairJob_GetStatusHistory",
+                new { RepairJobId = id },
+                commandType: CommandType.StoredProcedure,
+                cancellationToken: cancellationToken));
+
+        return rows.Select(row => row.ToDomain()).ToArray();
+    }
+
+    /// <inheritdoc />
     public async Task<RepairJob?> UpdateStatusAsync(
         Guid id,
         RepairStatus newStatus,
@@ -85,6 +102,32 @@ public sealed class SqlRepairJobRepository : IRepairJobRepository
             // boundary is what lets the API layer stay unaware that SQL Server exists.
             throw new InvalidStatusTransitionException(ex.Message);
         }
+    }
+
+    /// <summary>The shape returned by dbo.usp_RepairJob_GetStatusHistory.</summary>
+    private sealed class StatusChangeRow
+    {
+        public string FromStatusCode { get; init; } = string.Empty;
+
+        public string ToStatusCode { get; init; } = string.Empty;
+
+        public DateTimeOffset ChangedUtc { get; init; }
+
+        public string ChangedBy { get; init; } = string.Empty;
+
+        public string? Note { get; init; }
+
+        /// <remarks>
+        /// The procedure returns status <i>codes</i> rather than ids, and dbo.RepairStatus.Code
+        /// holds exactly the enum member names. Parsing by name rather than casting an integer
+        /// means a mismatch fails loudly here instead of silently producing the wrong status.
+        /// </remarks>
+        public StatusChange ToDomain() => new(
+            From: Enum.Parse<RepairStatus>(FromStatusCode),
+            To: Enum.Parse<RepairStatus>(ToStatusCode),
+            ChangedUtc: ChangedUtc,
+            ChangedBy: ChangedBy,
+            Note: Note);
     }
 
     /// <summary>

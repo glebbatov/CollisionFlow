@@ -255,3 +255,296 @@ select:disabled {
   border-radius: var(--radius);
   margin-bottom: 1.25rem;
 }
+
+/* ==========================================================================
+   Showcase layout
+   ========================================================================== */
+
+.masthead__inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Live data-source indicator. Text carries the meaning; the dot is decoration,
+   so the state is legible without relying on the color of a 8px circle. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-raised);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.pill__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-muted);
+}
+
+.pill--live .pill__dot { background: var(--status-ReadyForPickup); }
+.pill--degraded .pill__dot { background: var(--status-WaitingOnParts); }
+
+.section {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 4.5rem 1.5rem;
+}
+
+.section--alt {
+  max-width: none;
+  background: var(--surface);
+  border-block: 1px solid var(--line);
+}
+
+.section--alt > * {
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+.section--board {
+  padding-top: 2.5rem;
+}
+
+.section h2 {
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  margin: 0.25rem 0 0.75rem;
+  letter-spacing: -0.01em;
+}
+
+.section__eyebrow {
+  margin: 0;
+  color: var(--safety);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.section__lead {
+  margin: 0 0 2rem;
+  color: var(--ink-muted);
+  max-width: 60ch;
+  font-size: 1.02rem;
+}
+
+/* The table is wider than a phone. Scrolling it horizontally in its own container
+   keeps the page itself reflowing at 320px, which WCAG 1.4.10 asks for. */
+.board__scroll {
+  overflow-x: auto;
+}
+
+.row--history > td {
+  background: var(--asphalt);
+  padding: 0.5rem 1rem 1rem;
+}
+
+.button--quiet {
+  background: transparent;
+  color: var(--ink-muted);
+  border-color: var(--line);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Audit trail
+   ========================================================================== */
+
+.history {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1rem;
+  border-left: 2px solid var(--line);
+}
+
+.history__item {
+  padding: 0.4rem 0 0.4rem 0.75rem;
+  position: relative;
+}
+
+.history__item::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 0.85rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--safety);
+}
+
+.history__move { display: block; }
+
+.history__meta {
+  display: block;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.history__empty {
+  color: var(--ink-muted);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   Cards
+   ========================================================================== */
+
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+}
+
+.cards--two {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 1fr));
+}
+
+.card {
+  height: 100%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--safety);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+
+.section--alt .card { background: var(--surface-raised); }
+
+.card--wide { margin-top: 1rem; }
+
+.card__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.card__asked {
+  margin: 0 0 0.75rem;
+  font-style: italic;
+  color: var(--ink);
+}
+
+.card__check {
+  color: var(--status-ReadyForPickup);
+  font-weight: 700;
+  margin-right: 0.4rem;
+}
+
+.card__built {
+  margin: 0 0 0.75rem;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+}
+
+.card__evidence {
+  margin: 0;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 0.8rem;
+  color: var(--safety);
+  overflow-wrap: anywhere;
+}
+
+.chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+}
+
+code {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 0.9em;
+  background: var(--asphalt);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+}
+
+/* ==========================================================================
+   Architecture stack
+   ========================================================================== */
+
+.stack {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.stack__layer {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--safety);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+}
+
+.stack li + li .stack__layer { position: relative; }
+
+.stack li + li .stack__layer::before {
+  content: '\2193';
+  position: absolute;
+  left: 50%;
+  top: -1.15rem;
+  transform: translateX(-50%);
+  color: var(--ink-muted);
+}
+
+.stack__name { margin: 0 0 0.3rem; font-size: 1rem; }
+
+.stack__note { margin: 0; color: var(--ink-muted); font-size: 0.92rem; }
+
+.footer {
+  border-top: 1px solid var(--line);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.footer a { color: var(--safety); }
+
+/* ==========================================================================
+   Scroll reveal
+   ========================================================================== */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 520ms ease, transform 520ms ease;
+}
+
+.reveal--shown {
+  opacity: 1;
+  transform: none;
+}
+
+/*
+  The belt to the JavaScript's braces. Reveal already checks prefers-reduced-motion before
+  observing, but if scripting fails or the check is bypassed, this guarantees content is
+  visible rather than stuck at opacity 0 - an invisible page is a far worse failure than
+  an unanimated one.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

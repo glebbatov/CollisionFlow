@@ -92,6 +92,30 @@ public sealed class RepairJobsController : ControllerBase
             : Ok(updated.ToResponse(_policy));
     }
 
+    /// <summary>Returns the audit trail for a repair order, newest change first.</summary>
+    /// <remarks>
+    /// Every accepted status change is written by the same stored procedure and in the same
+    /// transaction as the change itself, so this cannot disagree with the job's current status.
+    /// </remarks>
+    [HttpGet("{id:guid}/history")]
+    [ProducesResponseType<IReadOnlyList<StatusChangeResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IReadOnlyList<StatusChangeResponse>>> GetHistory(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        // Checked first so an unknown id is a 404 rather than an empty list, which would
+        // otherwise be indistinguishable from a job that has simply never moved.
+        if (await _repository.GetByIdAsync(id, cancellationToken) is null)
+        {
+            return NotFoundProblem(id);
+        }
+
+        var history = await _repository.GetStatusHistoryAsync(id, cancellationToken);
+
+        return Ok(history.Select(change => change.ToResponse()).ToArray());
+    }
+
     private ActionResult NotFoundProblem(Guid id) =>
         Problem(
             statusCode: StatusCodes.Status404NotFound,

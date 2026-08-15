@@ -52,3 +52,13 @@ export interface SystemStatus {
   message: string | null
   since: string
 }
+
+export interface StatusChange {
+  from: RepairStatus
+  fromDisplayName: string
+  to: RepairStatus
+  toDisplayName: string
+  changedUtc: string
+  changedBy: string
+  note: string | null
+}
