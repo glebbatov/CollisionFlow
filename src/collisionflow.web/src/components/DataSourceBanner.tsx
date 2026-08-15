@@ -22,8 +22,10 @@ export function DataSourceBanner({ status }: Props) {
 
   return (
     <p className="banner" role="status">
-      <strong>Demo mode.</strong>{' '}
-      {status.message ?? 'The database is unavailable. Changes will not be saved.'}
+      <strong>Demo mode</strong>
+      <span>
+        {status.message ?? 'The database is unavailable. Changes will not be saved.'}
+      </span>
     </p>
   )
 }

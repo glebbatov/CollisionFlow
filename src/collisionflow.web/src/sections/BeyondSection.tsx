@@ -1,3 +1,4 @@
+import { Eyebrow } from '../components/Eyebrow'
 import { Reveal } from '../components/Reveal'
 import type { SystemStatus } from '../types'
 
@@ -46,15 +47,19 @@ interface Props {
 
 export function BeyondSection({ systemStatus }: Props) {
   return (
-    <section className="section section--alt" aria-labelledby="beyond-heading">
+    <section className="section section--alt" id="beyond" aria-labelledby="beyond-heading">
       <Reveal>
-        <p className="section__eyebrow">Beyond the brief</p>
-        <h2 id="beyond-heading">What production-ready actually meant here</h2>
-        <p className="section__lead">
-          Currently serving from{' '}
-          <strong>{systemStatus?.dataSource === 'Database' ? 'Azure SQL' : 'the in-memory fallback'}</strong>
-          .
-        </p>
+        <div className="section__head">
+          <Eyebrow>Beyond the brief</Eyebrow>
+          <h2 id="beyond-heading">What production-ready actually meant here</h2>
+          <p className="section__lead">
+            Currently serving from{' '}
+            <strong>
+              {systemStatus?.dataSource === 'Database' ? 'Azure SQL' : 'the in-memory fallback'}
+            </strong>
+            .
+          </p>
+        </div>
       </Reveal>
 
       <ul className="cards cards--two">
@@ -62,6 +67,9 @@ export function BeyondSection({ systemStatus }: Props) {
           <li key={item.title}>
             <Reveal delay={index * 60}>
               <article className="card">
+                <span className="card__index" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
                 <h3 className="card__title">{item.title}</h3>
                 <p className="card__built">{item.body}</p>
                 <p className="card__evidence">{item.detail}</p>

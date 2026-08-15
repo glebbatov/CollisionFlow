@@ -1,3 +1,4 @@
+import { Eyebrow } from '../components/Eyebrow'
 import { Reveal } from '../components/Reveal'
 import { StatusBadge } from '../components/StatusBadge'
 import type { RepairStatusInfo } from '../types'
@@ -43,22 +44,27 @@ interface Props {
 
 export function RequirementsSection({ statuses }: Props) {
   return (
-    <section className="section" aria-labelledby="requirements-heading">
+    <section className="section" id="requirements" aria-labelledby="requirements-heading">
       <Reveal>
-        <p className="section__eyebrow">The brief</p>
-        <h2 id="requirements-heading">Every requirement, and where it lives</h2>
-        <p className="section__lead">
-          The brief said a production-ready application was not expected. This is what it looks
-          like when one is built anyway — each line of the original request, and the code that
-          answers it.
-        </p>
+        <div className="section__head">
+          <Eyebrow>The brief</Eyebrow>
+          <h2 id="requirements-heading">Every requirement, and where it lives</h2>
+          <p className="section__lead">
+            The brief said a production-ready application was not expected. This is what it looks
+            like when one is built anyway — each line of the original request, and the code that
+            answers it.
+          </p>
+        </div>
       </Reveal>
 
-      <ul className="cards">
+      <ul className="cards cards--brief">
         {REQUIREMENTS.map((requirement, index) => (
           <li key={requirement.asked}>
             <Reveal delay={index * 70}>
               <article className="card">
+                <span className="card__index" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')} / {String(REQUIREMENTS.length).padStart(2, '0')}
+                </span>
                 <p className="card__asked">
                   <span className="card__check" aria-hidden="true">
                     &#10003;

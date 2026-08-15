@@ -1,47 +1,162 @@
 /*
-  Design tokens live in one place so color, spacing and type stay consistent
-  as the UI grows. The palette is deliberately dark - a shop floor board read
-  under fluorescent light, not a marketing page.
+  ==========================================================================
+  CollisionFlow - design tokens
+  ==========================================================================
+
+  An editorial dark system: a near-black canvas, hairline rules instead of
+  filled cards, square corners, and a single accent used sparingly. Structure
+  is carried by whitespace and 1px lines rather than by boxes and shadows,
+  which keeps a dense operational table legible without it looking like a
+  spreadsheet.
+
+  Two families do all the work. A light, wide geometric sans sets display
+  type; a monospace sets every label, number and piece of metadata. The
+  contrast between them is the design - there is no third font and no
+  decorative weight.
 */
 :root {
-  --asphalt: #12141a;
-  --surface: #1b1f27;
-  --surface-raised: #232833;
-  --line: #313846;
-  --ink: #e8eaed;
-  --ink-muted: #a5aebc;
-  --safety: #ffc72c;
-  --danger: #ff8a80;
+  /* Surfaces, darkest to lightest. */
+  --void: #0e0e0e;
+  --surface: #141414;
+  --surface-raised: #191919;
+  --surface-hover: #1f1f1f;
 
-  --status-Received: #7dd3fc;
-  --status-InProgress: #ffc72c;
-  --status-WaitingOnParts: #fb923c;
-  --status-QualityCheck: #c4b5fd;
-  --status-ReadyForPickup: #4ade80;
-  --status-Completed: #94a3b8;
+  /* Hairlines. --line is the structural rule; --line-soft is for divisions
+     inside an already-bordered element, where a full-strength rule reads as
+     a second box. */
+  --line: #2f2f2f;
+  --line-soft: rgba(255, 255, 255, 0.07);
+  --line-strong: #3f3f3f;
 
-  --radius: 6px;
-  --gap: 1rem;
+  /* Text. Every one of these clears 4.5:1 against all three surfaces, so a
+     label never becomes unreadable just because it sits on a raised row. */
+  --ink: #f2f2f2;
+  --ink-muted: #c6c6c6;
+  --ink-dim: #a9a9a9;
+  --ink-faint: #8a8a8a;
+  /* Purely ornamental: the brackets around a label, hairline glyphs. Every use
+     is aria-hidden and duplicates nothing, so it is exempt from SC 1.4.3 -
+     which is exactly why it must never be used for anything else. */
+  --ink-deco: #5a5a5a;
+
+  --accent: #cfff6a;
+  --accent-ink: #0e0e0e;
+  --accent-wash: rgba(207, 255, 106, 0.09);
+
+  --danger: #ff8f85;
+
+  /*
+    Status hues. Color is reinforcement only - every badge and tile also
+    carries its text label and a glyph, so the board is fully readable in
+    grayscale or with any form of color vision deficiency. The hues are
+    ordered so that adjacent workflow steps are never adjacent on the wheel.
+  */
+  --status-Received: #8ecdf0;
+  --status-InProgress: #cfff6a;
+  --status-WaitingOnParts: #f2a15c;
+  --status-QualityCheck: #c0a9f0;
+  --status-ReadyForPickup: #5ad3a0;
+  --status-Completed: #9a9a9a;
+
+  --font-display: 'Outfit', 'Segoe UI Variable Display', 'Segoe UI', system-ui,
+    -apple-system, sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, 'Cascadia Mono', Consolas, 'SF Mono', monospace;
+
+  /*
+    Fluid type built from clamp() rather than the raw viewport units the
+    reference uses. A size expressed purely in vw ignores the browser's font
+    size and stops responding to zoom, which fails WCAG 1.4.4 (Resize Text).
+    Anchoring both ends of every clamp in rem keeps the fluidity and keeps
+    the text resizable.
+  */
+  --step--2: clamp(0.6875rem, 0.66rem + 0.14vw, 0.75rem);
+  --step--1: clamp(0.8125rem, 0.78rem + 0.17vw, 0.9375rem);
+  --step-0: clamp(0.9375rem, 0.9rem + 0.2vw, 1.0625rem);
+  --step-1: clamp(1.0625rem, 0.99rem + 0.34vw, 1.3125rem);
+  --step-2: clamp(1.375rem, 1.15rem + 1.1vw, 2.125rem);
+  --step-3: clamp(1.875rem, 1.35rem + 2.6vw, 3.75rem);
+  --step-4: clamp(2.5rem, 1.5rem + 4.9vw, 5.75rem);
+
+  /* One page gutter, used by every full-width element so nothing drifts. */
+  --gutter: clamp(1.25rem, 5.5vw, 5.5rem);
+  --section-space: clamp(4rem, 9vh, 6.5rem);
+  --shell: 96rem;
+
+  /* Square by default. The only curve in the system is a full pill. */
+  --radius: 0px;
+  --pill: 999px;
+
+  /* Measured at runtime by the masthead's ResizeObserver. The literal here is
+     only the value used for the first paint, before the observer has run. */
+  --masthead-h: 4.9rem;
 }
 
-* {
+/*
+  Without this, every in-page anchor lands with its heading tucked underneath
+  the sticky masthead. scroll-padding-top on the scroll container is the fix
+  the platform provides, and unlike scroll-margin on each target it cannot be
+  forgotten when a new section is added.
+*/
+html {
+  scroll-padding-top: calc(var(--masthead-h) + 1.5rem);
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
-  background: var(--asphalt);
+  background: var(--void);
+  color: var(--ink-muted);
+  font-family: var(--font-display);
+  font-size: var(--step-0);
+  font-weight: 300;
+  line-height: 1.6;
+  letter-spacing: 0.005em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
   color: var(--ink);
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
+  font-weight: 200;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  text-wrap: balance;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--ink);
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 0.25em;
+  transition: color 200ms ease, text-decoration-color 200ms ease;
+}
+
+a:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
 }
 
 /* A visible, high-contrast focus ring on every interactive element.
    WCAG 2.2 raised the bar here (SC 2.4.11 / 2.4.13) and the browser default
-   is easy to lose against a dark surface. */
+   is easy to lose against a near-black surface. */
 :focus-visible {
-  outline: 3px solid var(--safety);
-  outline-offset: 2px;
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 /* Present to screen readers, absent from the screen. Not display:none,
@@ -62,110 +177,594 @@ body {
   position: absolute;
   left: -9999px;
   top: 0;
-  padding: 0.75rem 1rem;
-  background: var(--safety);
-  color: var(--asphalt);
-  font-weight: 600;
-  z-index: 10;
+  z-index: 100;
+  padding: 0.9rem 1.25rem;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  text-decoration: none;
 }
 
 .skip-link:focus {
   left: 0;
 }
 
-.masthead {
-  border-bottom: 3px solid var(--safety);
-  padding: 1.25rem 1.5rem;
-  background: var(--surface);
+/* ==========================================================================
+   Shared primitives
+   ========================================================================== */
+
+/*
+  The bracketed monospace label. Borrowed wholesale from the reference, where
+  it is the single most recognizable element of the system. The brackets are
+  real elements marked aria-hidden rather than CSS generated content, because
+  several screen readers do announce ::before content and "left square bracket
+  the shop floor right square bracket" is not what anyone needs to hear.
+*/
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  line-height: 1;
 }
 
-.masthead h1 {
-  margin: 0;
-  font-size: 1.5rem;
+.eyebrow__bracket {
+  color: var(--ink-deco);
+  font-weight: 300;
+}
+
+.eyebrow--quiet {
+  color: var(--ink-dim);
+}
+
+/* Monospace metadata: file paths, counts, timestamps, technology names. */
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
   letter-spacing: 0.02em;
 }
 
-.masthead__sub {
-  color: var(--ink-muted);
-  font-size: 0.9rem;
-  font-weight: 400;
-  margin-left: 0.5rem;
+.mono--label {
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-dim);
 }
 
-main {
-  padding: 1.5rem;
-  max-width: 1200px;
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--accent);
+  background: var(--accent-wash);
+  padding: 0.1em 0.4em;
+  border-radius: var(--radius);
+}
+
+/* ==========================================================================
+   Masthead
+   ========================================================================== */
+
+.masthead {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: color-mix(in srgb, var(--void) 86%, transparent);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.masthead__inner {
+  max-width: var(--shell);
   margin: 0 auto;
+  padding: 1.15rem var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
+.wordmark {
+  margin: 0;
+  font-size: var(--step-1);
+  font-weight: 200;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  color: var(--ink);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.wordmark__sub {
+  display: block;
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.masthead__nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2.5vw, 2.75rem);
+}
+
+/* min-height, not just padding: 11px monospace gives a 19px line box, and
+   WCAG 2.2 SC 2.5.8 wants 24x24 for a standalone target. Padding alone would
+   leave it dependent on the font that happens to load. */
+.navlink {
+  display: inline-flex;
+  align-items: center;
+  /* inline-flex collapses the whitespace between the bracket spans and the
+     label, so the gap has to be declared rather than typed. */
+  gap: 0.45em;
+  min-height: 1.5rem;
+  padding-block: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-dim);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 200ms ease;
+}
+
+.navlink:hover {
+  color: var(--ink);
+}
+
+.navlink__bracket {
+  color: var(--ink-deco);
+  transition: color 200ms ease;
+}
+
+.navlink:hover .navlink__bracket {
+  color: var(--accent);
+}
+
+@media (max-width: 60rem) {
+  .masthead__nav {
+    display: none;
+  }
+}
+
+/* At phone widths the wordmark and the data-source pill are competing for
+   about 350px. Tightening the tracking on both keeps them on one line, which
+   matters more than either being at its ideal size: a sticky bar that wraps to
+   two rows eats a tenth of the viewport on every screen. */
+@media (max-width: 34rem) {
+  .masthead__inner {
+    gap: 0.5rem 0.75rem;
+  }
+
+  .wordmark {
+    font-size: var(--step-0);
+    letter-spacing: 0.08em;
+  }
+
+  /* Tracked-out 11px monospace is wider than the wordmark above it - at 320px
+     the subtitle, not the title, is what breaks the line. */
+  .wordmark__sub {
+    margin-top: 0.35rem;
+    font-size: 0.625rem;
+    letter-spacing: 0.06em;
+  }
+
+  .pill {
+    padding-inline: 0.55rem;
+    letter-spacing: 0.04em;
+  }
+}
+
+/* Live data-source indicator. Text carries the meaning; the dot is
+   decoration, so the state is legible without relying on the color of an
+   8px circle. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.42rem 0.85rem;
+  border-radius: var(--pill);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.pill__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  flex-shrink: 0;
+}
+
+.pill--live .pill__dot {
+  background: var(--status-ReadyForPickup);
+  box-shadow: 0 0 0 3px rgba(90, 211, 160, 0.16);
+}
+
+.pill--degraded .pill__dot {
+  background: var(--status-WaitingOnParts);
+  box-shadow: 0 0 0 3px rgba(242, 161, 92, 0.16);
+}
+
+/* ==========================================================================
+   Hero
+   ========================================================================== */
+
+.hero {
+  position: relative;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: clamp(3.5rem, 9vh, 7rem) var(--gutter) clamp(2.5rem, 6vh, 4.5rem);
+  overflow: hidden;
+}
+
+/* A single soft bloom behind the headline. It is the only non-flat thing on
+   the page, which is what keeps it from reading as a gradient theme. */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: -30% 20% auto -10%;
+  height: 40rem;
+  background: radial-gradient(
+    45% 50% at 30% 40%,
+    rgba(207, 255, 106, 0.07),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.hero > * {
+  position: relative;
+}
+
+.hero__headline {
+  margin: 1.75rem 0 0;
+  font-size: var(--step-4);
+  max-width: 16ch;
+}
+
+.hero__headline em {
+  display: block;
+  font-style: normal;
+  color: var(--ink-faint);
+}
+
+.hero__lead {
+  margin: 1.75rem 0 0;
+  max-width: 54ch;
+  color: var(--ink-dim);
+  font-size: var(--step-1);
+  line-height: 1.5;
+}
+
+/* The metadata strip. Hairline-divided cells of monospace facts - the
+   reference's signature way of grounding a large headline in something
+   concrete. */
+.hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: clamp(2.5rem, 6vh, 4rem) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.hero__meta li {
+  flex: 1 1 11rem;
+  padding: 1.25rem 1.5rem 1.25rem 0;
+  border-right: 1px solid var(--line-soft);
+}
+
+.hero__meta li:last-child {
+  border-right: 0;
+}
+
+@media (min-width: 48rem) {
+  .hero__meta li + li {
+    padding-left: 1.5rem;
+  }
+}
+
+/* Stacked, the vertical rule between cells becomes a stray line down the right
+   edge of the page. Below 48rem the division turns horizontal instead. */
+@media (max-width: 47.999rem) {
+  .hero__meta li {
+    flex: 1 1 100%;
+    padding-right: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .hero__meta li:last-child {
+    border-bottom: 0;
+  }
+}
+
+.hero__meta dt,
+.hero__meta-label {
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+}
+
+.hero__meta-value {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: var(--step-1);
+  font-weight: 200;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Sections
+   ========================================================================== */
+
+.section {
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: var(--section-space) var(--gutter);
+}
+
+/* An "alt" section is marked by a rule and a half-step lighter canvas, not
+   by a card. Full-bleed, with its own contents re-centered inside. */
+.section--alt {
+  max-width: none;
+  background: var(--surface);
+  border-block: 1px solid var(--line);
+}
+
+.section--alt > * {
+  max-width: var(--shell);
+  margin-inline: auto;
+}
+
+.section--board {
+  padding-top: clamp(1rem, 3vh, 2rem);
+}
+
+.section__head {
+  max-width: 62ch;
+  margin-bottom: clamp(2.5rem, 6vh, 4rem);
+}
+
+.section h2 {
+  font-size: var(--step-3);
+  margin: 1.25rem 0 0;
+}
+
+.section__lead {
+  margin: 1.5rem 0 0;
+  color: var(--ink-dim);
+  max-width: 58ch;
+  font-size: var(--step-0);
+  line-height: 1.65;
+}
+
+.section__lead strong {
+  color: var(--ink);
+  font-weight: 400;
+}
+
+/* ==========================================================================
+   Notices
+   ========================================================================== */
+
+.alert,
+.banner {
+  display: flex;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--line);
+  border-left-width: 2px;
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: var(--step--1);
+  margin-bottom: 1.75rem;
 }
 
 .alert {
-  border-left: 4px solid var(--danger);
-  background: var(--surface-raised);
-  color: var(--ink);
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius);
+  border-left-color: var(--danger);
 }
 
+/* Amber rather than red: this is a condition, not a failure - the board still
+   works, it just is not backed by the real database. */
+.banner {
+  border-left-color: var(--status-WaitingOnParts);
+}
+
+.banner strong,
+.alert strong {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  padding-top: 0.15em;
+}
+
+.loading {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* ==========================================================================
+   Tally
+   ========================================================================== */
+
 .tally {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--gap);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0;
   list-style: none;
   padding: 0;
-  margin: 0 0 1.5rem;
+  margin: 0 0 clamp(2rem, 5vh, 3rem);
+  border: 1px solid var(--line);
 }
 
 .tally__item {
-  flex: 1 1 8rem;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--line);
-  border-radius: var(--radius);
-  padding: 0.75rem 1rem;
+  padding: 1.35rem 1.5rem;
+  border-right: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  position: relative;
+}
+
+/* The 2px top rule is the only place a status hue appears at size. It sits
+   above the number it belongs to, so the association is positional rather
+   than something the reader has to decode. */
+.tally__item::before {
+  content: '';
+  position: absolute;
+  inset: -1px auto auto -1px;
+  width: calc(100% + 2px);
+  height: 2px;
+  background: var(--line-strong);
 }
 
 .tally__count {
   display: block;
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-size: var(--step-2);
+  font-weight: 200;
+  line-height: 1;
+  color: var(--ink);
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 .tally__label {
-  color: var(--ink-muted);
-  font-size: 0.85rem;
+  display: block;
+  margin-top: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-dim);
+}
+
+/* ==========================================================================
+   Board
+   ========================================================================== */
+
+/* The table is wider than a phone. Scrolling it horizontally in its own
+   container keeps the page itself reflowing at 320px, which WCAG 1.4.10
+   asks for - and below 60rem the table drops the horizontal axis entirely
+   and becomes a stack of labelled cards. */
+.board__scroll {
+  border: 1px solid var(--line);
+  overflow-x: auto;
 }
 
 .board {
   width: 100%;
   border-collapse: collapse;
-  background: var(--surface);
-  border-radius: var(--radius);
-  overflow: hidden;
+  background: transparent;
+  font-size: var(--step--1);
+}
+
+/* Uniform row height is what makes a board scannable - a column that wraps on
+   three rows out of twenty destroys the horizontal rhythm the eye is using to
+   track across. The cells refuse to wrap and the container scrolls instead;
+   below 60rem the table stops being a table at all, so the rule lifts. */
+@media (min-width: 60.001rem) {
+  .board {
+    min-width: 62rem;
+  }
+
+  .board td,
+  .board th {
+    white-space: nowrap;
+  }
 }
 
 .board th,
 .board td {
   text-align: left;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--line);
+  padding: 0.95rem 0.9rem;
+  border-bottom: 1px solid var(--line-soft);
+  vertical-align: middle;
 }
 
-.board th {
+/* Not position:sticky. The scroll container above computes overflow-y to auto
+   the moment overflow-x is set, so a sticky header would anchor to a box that
+   never scrolls vertically - it would simply never move. */
+.board thead th {
   background: var(--surface-raised);
-  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-muted);
+  letter-spacing: 0.16em;
+  color: var(--ink-dim);
+  border-bottom: 1px solid var(--line);
+  padding-block: 0.9rem;
+  white-space: nowrap;
+}
+
+.board tbody tr {
+  transition: background-color 160ms ease;
+}
+
+.board tbody tr:hover {
+  background: var(--surface);
+}
+
+.board tbody tr:last-child > td {
+  border-bottom: 0;
 }
 
 .cell--mono {
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  letter-spacing: 0.03em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.cell--name {
+  color: var(--ink);
 }
 
 .cell--muted {
-  color: var(--ink-muted);
-  font-size: 0.9rem;
+  color: var(--ink-dim);
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.row--history > td {
+  background: var(--void);
+  padding: 0.25rem 1.25rem 1.5rem;
 }
 
 /*
@@ -176,19 +775,31 @@ main {
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
   background: var(--surface-raised);
-  border-left: 4px solid var(--line);
-  border-radius: 3px;
-  padding: 0.3rem 0.6rem;
-  font-size: 0.9rem;
+  border: 1px solid var(--line);
+  border-left-width: 2px;
+  border-left-color: var(--line-strong);
+  border-radius: var(--radius);
+  padding: 0.35rem 0.7rem;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
   white-space: nowrap;
+  line-height: 1.35;
 }
 
 .badge__glyph {
-  font-size: 1rem;
+  font-size: 0.95em;
   line-height: 1;
+  color: var(--ink-faint);
 }
+
+/* ==========================================================================
+   Controls
+   ========================================================================== */
 
 .move {
   display: flex;
@@ -198,163 +809,104 @@ main {
 
 select,
 button {
-  font: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
   border-radius: var(--radius);
   border: 1px solid var(--line);
-  padding: 0.45rem 0.6rem;
+  padding: 0.55rem 0.75rem;
   background: var(--surface-raised);
-  color: var(--ink);
+  color: var(--ink-muted);
   /* WCAG 2.2 SC 2.5.8 asks for a 24x24 minimum target. */
-  min-height: 2.25rem;
+  min-height: 2.5rem;
+  cursor: pointer;
+  transition: border-color 180ms ease, background-color 180ms ease,
+    color 180ms ease;
 }
 
+select {
+  /* Fixed width so the Update buttons line up down the column instead of
+     stepping in and out with the length of each status name. */
+  min-width: 9rem;
+  padding-right: 1.75rem;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-dim) 50%),
+    linear-gradient(135deg, var(--ink-dim) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+select:hover:not(:disabled),
+button:hover:not(:disabled) {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+/* The one filled control on the page. Everything else is an outline, so the
+   primary action does not have to shout to be found. */
 button {
-  background: var(--safety);
-  color: var(--asphalt);
-  border-color: var(--safety);
-  font-weight: 600;
-  cursor: pointer;
-  padding-inline: 1rem;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  font-weight: 500;
+  padding-inline: 1.1rem;
+}
+
+button:hover:not(:disabled) {
+  background: #ddff8c;
+  border-color: #ddff8c;
+  color: var(--accent-ink);
 }
 
 button:disabled,
 select:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-}
-
-
-/* Per-status accents. Color is reinforcement only - every badge and tile
-   also carries its text label. */
-.badge--Received { border-left-color: var(--status-Received); }
-.badge--Received .badge__glyph { color: var(--status-Received); }
-.tally__item--Received { border-top-color: var(--status-Received); }
-.badge--InProgress { border-left-color: var(--status-InProgress); }
-.badge--InProgress .badge__glyph { color: var(--status-InProgress); }
-.tally__item--InProgress { border-top-color: var(--status-InProgress); }
-.badge--WaitingOnParts { border-left-color: var(--status-WaitingOnParts); }
-.badge--WaitingOnParts .badge__glyph { color: var(--status-WaitingOnParts); }
-.tally__item--WaitingOnParts { border-top-color: var(--status-WaitingOnParts); }
-.badge--QualityCheck { border-left-color: var(--status-QualityCheck); }
-.badge--QualityCheck .badge__glyph { color: var(--status-QualityCheck); }
-.tally__item--QualityCheck { border-top-color: var(--status-QualityCheck); }
-.badge--ReadyForPickup { border-left-color: var(--status-ReadyForPickup); }
-.badge--ReadyForPickup .badge__glyph { color: var(--status-ReadyForPickup); }
-.tally__item--ReadyForPickup { border-top-color: var(--status-ReadyForPickup); }
-.badge--Completed { border-left-color: var(--status-Completed); }
-.badge--Completed .badge__glyph { color: var(--status-Completed); }
-.tally__item--Completed { border-top-color: var(--status-Completed); }
-
-/* Degraded-mode notice. Amber rather than red: this is a condition, not a failure -
-   the board still works, it just is not backed by the real database. */
-.banner {
-  border-left: 4px solid var(--status-WaitingOnParts);
-  background: var(--surface-raised);
-  color: var(--ink);
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius);
-  margin-bottom: 1.25rem;
-}
-
-/* ==========================================================================
-   Showcase layout
-   ========================================================================== */
-
-.masthead__inner {
-  max-width: 1180px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-/* Live data-source indicator. Text carries the meaning; the dot is decoration,
-   so the state is legible without relying on the color of a 8px circle. */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0.35rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--surface-raised);
-  font-size: 0.85rem;
-  white-space: nowrap;
-}
-
-.pill__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--ink-muted);
-}
-
-.pill--live .pill__dot { background: var(--status-ReadyForPickup); }
-.pill--degraded .pill__dot { background: var(--status-WaitingOnParts); }
-
-.section {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 4.5rem 1.5rem;
-}
-
-.section--alt {
-  max-width: none;
-  background: var(--surface);
-  border-block: 1px solid var(--line);
-}
-
-.section--alt > * {
-  max-width: 1180px;
-  margin-inline: auto;
-}
-
-.section--board {
-  padding-top: 2.5rem;
-}
-
-.section h2 {
-  font-size: clamp(1.5rem, 3vw, 2.1rem);
-  margin: 0.25rem 0 0.75rem;
-  letter-spacing: -0.01em;
-}
-
-.section__eyebrow {
-  margin: 0;
-  color: var(--safety);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.section__lead {
-  margin: 0 0 2rem;
-  color: var(--ink-muted);
-  max-width: 60ch;
-  font-size: 1.02rem;
-}
-
-/* The table is wider than a phone. Scrolling it horizontally in its own container
-   keeps the page itself reflowing at 320px, which WCAG 1.4.10 asks for. */
-.board__scroll {
-  overflow-x: auto;
-}
-
-.row--history > td {
-  background: var(--asphalt);
-  padding: 0.5rem 1rem 1rem;
 }
 
 .button--quiet {
   background: transparent;
-  color: var(--ink-muted);
+  color: var(--ink-dim);
   border-color: var(--line);
-  font-weight: 500;
+  font-weight: 400;
 }
+
+.button--quiet:hover:not(:disabled) {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+/* ==========================================================================
+   Per-status accents. Color is reinforcement only - every badge and tile
+   also carries its text label.
+   ========================================================================== */
+
+.badge--Received { border-left-color: var(--status-Received); }
+.badge--Received .badge__glyph { color: var(--status-Received); }
+.tally__item--Received::before { background: var(--status-Received); }
+
+.badge--InProgress { border-left-color: var(--status-InProgress); }
+.badge--InProgress .badge__glyph { color: var(--status-InProgress); }
+.tally__item--InProgress::before { background: var(--status-InProgress); }
+
+.badge--WaitingOnParts { border-left-color: var(--status-WaitingOnParts); }
+.badge--WaitingOnParts .badge__glyph { color: var(--status-WaitingOnParts); }
+.tally__item--WaitingOnParts::before { background: var(--status-WaitingOnParts); }
+
+.badge--QualityCheck { border-left-color: var(--status-QualityCheck); }
+.badge--QualityCheck .badge__glyph { color: var(--status-QualityCheck); }
+.tally__item--QualityCheck::before { background: var(--status-QualityCheck); }
+
+.badge--ReadyForPickup { border-left-color: var(--status-ReadyForPickup); }
+.badge--ReadyForPickup .badge__glyph { color: var(--status-ReadyForPickup); }
+.tally__item--ReadyForPickup::before { background: var(--status-ReadyForPickup); }
+
+.badge--Completed { border-left-color: var(--status-Completed); }
+.badge--Completed .badge__glyph { color: var(--status-Completed); }
+.tally__item--Completed::before { background: var(--status-Completed); }
 
 /* ==========================================================================
    Audit trail
@@ -363,98 +915,165 @@ select:disabled {
 .history {
   list-style: none;
   margin: 0;
-  padding: 0 0 0 1rem;
-  border-left: 2px solid var(--line);
+  padding: 0 0 0 1.1rem;
+  border-left: 1px solid var(--line);
 }
 
 .history__item {
-  padding: 0.4rem 0 0.4rem 0.75rem;
+  padding: 0.55rem 0 0.55rem 1rem;
   position: relative;
 }
 
 .history__item::before {
   content: '';
   position: absolute;
-  left: -5px;
-  top: 0.85rem;
-  width: 8px;
-  height: 8px;
+  left: -3px;
+  top: 1.05rem;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: var(--safety);
+  background: var(--accent);
 }
 
-.history__move { display: block; }
+.history__move {
+  display: block;
+  font-size: var(--step--1);
+  color: var(--ink);
+}
+
+.history__move strong {
+  font-weight: 400;
+}
 
 .history__meta {
   display: block;
-  color: var(--ink-muted);
-  font-size: 0.85rem;
+  margin-top: 0.2rem;
+  font-family: var(--font-mono);
+  color: var(--ink-dim);
+  font-size: var(--step--2);
+  letter-spacing: 0.02em;
 }
 
 .history__empty {
-  color: var(--ink-muted);
+  color: var(--ink-dim);
   margin: 0;
-  font-size: 0.9rem;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
 }
 
 /* ==========================================================================
    Cards
    ========================================================================== */
 
+/*
+  Cards are hairline cells in a grid rather than floating panels: negative
+  margins collapse the shared borders so the whole group reads as one ruled
+  block, the way a contents page does.
+*/
 .cards {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+  gap: 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
 }
 
 .cards--two {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+}
+
+/* Five items into an auto-fit grid leaves a hole wherever the count and the
+   column count disagree. Three explicit columns with the last item spanning
+   two closes the block off squarely at every width above 64rem. */
+@media (min-width: 64rem) {
+  .cards--brief {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cards--brief > li:last-child {
+    grid-column: span 2;
+  }
+}
+
+.cards > li {
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.cards > li > * {
+  height: 100%;
 }
 
 .card {
   height: 100%;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--safety);
-  border-radius: var(--radius);
-  padding: 1.25rem;
+  background: transparent;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  transition: background-color 220ms ease;
 }
 
-.section--alt .card { background: var(--surface-raised); }
+.cards > li:hover .card {
+  background: var(--surface-raised);
+}
 
-.card--wide { margin-top: 1rem; }
+.section--alt .cards > li:hover .card {
+  background: var(--surface-hover);
+}
+
+.card--wide {
+  margin-top: -1px;
+  border: 1px solid var(--line);
+}
+
+.card__index {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+  margin-bottom: 1.1rem;
+}
 
 .card__title {
-  margin: 0 0 0.5rem;
-  font-size: 1.05rem;
+  margin: 0 0 0.9rem;
+  font-size: var(--step-1);
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
 }
 
 .card__asked {
-  margin: 0 0 0.75rem;
-  font-style: italic;
+  margin: 0 0 1rem;
   color: var(--ink);
+  font-size: var(--step-0);
+  font-weight: 300;
+  line-height: 1.45;
 }
 
 .card__check {
-  color: var(--status-ReadyForPickup);
-  font-weight: 700;
-  margin-right: 0.4rem;
+  color: var(--accent);
+  margin-right: 0.5rem;
 }
 
 .card__built {
-  margin: 0 0 0.75rem;
-  color: var(--ink-muted);
-  font-size: 0.95rem;
+  margin: 0 0 1.25rem;
+  color: var(--ink-dim);
+  font-size: var(--step--1);
+  line-height: 1.65;
 }
 
 .card__evidence {
   margin: 0;
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  font-size: 0.8rem;
-  color: var(--safety);
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line-soft);
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.02em;
+  color: var(--accent);
   overflow-wrap: anywhere;
 }
 
@@ -463,16 +1082,8 @@ select:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin: 1rem 0 0;
+  margin: 1.25rem 0 0;
   padding: 0;
-}
-
-code {
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  font-size: 0.9em;
-  background: var(--asphalt);
-  padding: 0.1rem 0.35rem;
-  border-radius: 3px;
 }
 
 /* ==========================================================================
@@ -483,42 +1094,181 @@ code {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: 0.6rem;
+  border-top: 1px solid var(--line);
+}
+
+.stack > li {
+  border-bottom: 1px solid var(--line);
 }
 
 .stack__layer {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-left: 4px solid var(--safety);
-  border-radius: var(--radius);
-  padding: 1rem 1.25rem;
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 15rem) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: baseline;
+  padding: clamp(1.35rem, 3vh, 2rem) 0;
+  transition: padding-left 260ms ease;
 }
 
-.stack li + li .stack__layer { position: relative; }
-
-.stack li + li .stack__layer::before {
-  content: '\2193';
-  position: absolute;
-  left: 50%;
-  top: -1.15rem;
-  transform: translateX(-50%);
-  color: var(--ink-muted);
+.stack > li:hover .stack__layer {
+  padding-left: 0.75rem;
 }
 
-.stack__name { margin: 0 0 0.3rem; font-size: 1rem; }
+.stack__index {
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+}
 
-.stack__note { margin: 0; color: var(--ink-muted); font-size: 0.92rem; }
+.stack__name {
+  margin: 0;
+  font-size: var(--step-1);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.stack__note {
+  margin: 0;
+  color: var(--ink-dim);
+  font-size: var(--step--1);
+  line-height: 1.6;
+}
+
+@media (max-width: 52rem) {
+  .stack__layer {
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 0.5rem 1rem;
+  }
+
+  .stack__note {
+    grid-column: 2;
+  }
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
 
 .footer {
   border-top: 1px solid var(--line);
-  padding: 2rem 1.5rem;
-  text-align: center;
-  color: var(--ink-muted);
-  font-size: 0.9rem;
+  padding: clamp(2.5rem, 6vh, 4rem) var(--gutter);
 }
 
-.footer a { color: var(--safety); }
+.footer__inner {
+  max-width: var(--shell);
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-dim);
+}
+
+.footer a {
+  color: var(--ink-dim);
+}
+
+.footer a:hover {
+  color: var(--accent);
+}
+
+/* ==========================================================================
+   Board -> cards below 60rem
+   ==========================================================================
+   A seven-column table on a phone is a horizontal-scroll trap. Below 60rem
+   each row becomes a labelled block: the th text is repeated through
+   data-label so the association survives the loss of the header row, and the
+   real <thead> is hidden from sight but not from the accessibility tree.
+*/
+@media (max-width: 60rem) {
+  .board__scroll {
+    border: 0;
+    overflow-x: visible;
+  }
+
+  .board,
+  .board tbody,
+  .board tr,
+  .board td {
+    display: block;
+    width: 100%;
+  }
+
+  .board thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .board tbody tr {
+    border: 1px solid var(--line);
+    margin-bottom: -1px;
+    padding: 0.5rem 0;
+  }
+
+  .board tbody tr:hover {
+    background: transparent;
+  }
+
+  .board td {
+    display: grid;
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+    gap: 1rem;
+    align-items: center;
+    padding: 0.6rem 1.1rem;
+    border-bottom: 0;
+  }
+
+  .board td::before {
+    content: attr(data-label);
+    align-self: center;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-faint);
+  }
+
+  .row--history > td {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 0.5rem;
+  }
+
+  .row--history > td::before {
+    content: none;
+  }
+
+  .move {
+    flex-wrap: wrap;
+  }
+
+  select {
+    min-width: 0;
+    flex: 1 1 8rem;
+  }
+}
+
+/* Under about 420px a label column plus a status chip that will not wrap is
+   wider than the screen. The label moves above its value rather than beside
+   it, which is the last arrangement that still fits at the 320px floor
+   WCAG 1.4.10 sets. */
+@media (max-width: 26rem) {
+  .board td {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.3rem;
+    padding-block: 0.5rem;
+  }
+}
 
 /* ==========================================================================
    Scroll reveal
@@ -526,8 +1276,9 @@ code {
 
 .reveal {
   opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 520ms ease, transform 520ms ease;
+  transform: translateY(18px);
+  transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .reveal--shown {
@@ -536,15 +1287,22 @@ code {
 }
 
 /*
-  The belt to the JavaScript's braces. Reveal already checks prefers-reduced-motion before
-  observing, but if scripting fails or the check is bypassed, this guarantees content is
-  visible rather than stuck at opacity 0 - an invisible page is a far worse failure than
-  an unanimated one.
+  The belt to the JavaScript's braces. Reveal already checks
+  prefers-reduced-motion before observing, but if scripting fails or the check
+  is bypassed, this guarantees content is visible rather than stuck at
+  opacity 0 - an invisible page is a far worse failure than an unanimated one.
 */
 @media (prefers-reduced-motion: reduce) {
   .reveal {
     opacity: 1;
     transform: none;
     transition: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
   }
 }

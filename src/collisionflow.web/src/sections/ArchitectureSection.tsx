@@ -1,3 +1,4 @@
+import { Eyebrow } from '../components/Eyebrow'
 import { Reveal } from '../components/Reveal'
 
 const LAYERS = [
@@ -25,15 +26,17 @@ const LAYERS = [
 
 export function ArchitectureSection() {
   return (
-    <section className="section" aria-labelledby="architecture-heading">
+    <section className="section" id="architecture" aria-labelledby="architecture-heading">
       <Reveal>
-        <p className="section__eyebrow">Architecture</p>
-        <h2 id="architecture-heading">Dependencies point inward</h2>
-        <p className="section__lead">
-          Storage depends on the business rules. The business rules do not depend on storage —
-          which is what lets the same API run against stored procedures in Azure and against a
-          list in memory, with neither the controllers nor the domain knowing which.
-        </p>
+        <div className="section__head">
+          <Eyebrow>Architecture</Eyebrow>
+          <h2 id="architecture-heading">Dependencies point inward</h2>
+          <p className="section__lead">
+            Storage depends on the business rules. The business rules do not depend on storage —
+            which is what lets the same API run against stored procedures in Azure and against a
+            list in memory, with neither the controllers nor the domain knowing which.
+          </p>
+        </div>
       </Reveal>
 
       <ol className="stack">
@@ -41,6 +44,9 @@ export function ArchitectureSection() {
           <li key={layer.name}>
             <Reveal delay={index * 80}>
               <div className="stack__layer">
+                <span className="stack__index" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
                 <h3 className="stack__name">{layer.name}</h3>
                 <p className="stack__note">{layer.note}</p>
               </div>

@@ -1,12 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ApiError, api } from './api/client'
 import { DataSourceBanner } from './components/DataSourceBanner'
+import { Eyebrow } from './components/Eyebrow'
 import { JobRow } from './components/JobRow'
 import { Reveal } from './components/Reveal'
 import { ArchitectureSection } from './sections/ArchitectureSection'
 import { BeyondSection } from './sections/BeyondSection'
 import { RequirementsSection } from './sections/RequirementsSection'
 import type { RepairJob, RepairStatus, RepairStatusInfo, SystemStatus } from './types'
+
+const NAV = [
+  { href: '#board', label: 'Board' },
+  { href: '#requirements', label: 'Brief' },
+  { href: '#beyond', label: 'Beyond' },
+  { href: '#architecture', label: 'Stack' },
+]
 
 export default function App() {
   const [jobs, setJobs] = useState<RepairJob[] | null>(null)
@@ -15,6 +23,34 @@ export default function App() {
   const [announcement, setAnnouncement] = useState('')
   const [savingId, setSavingId] = useState<string | null>(null)
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null)
+  const masthead = useRef<HTMLElement>(null)
+
+  /*
+   * Publishes the masthead's real height as --masthead-h.
+   *
+   * The bar is sticky, so every in-page anchor would otherwise land with its
+   * heading hidden underneath it. The offset cannot be a constant: the bar is
+   * built from fluid type, so its height moves with the viewport, and it moves
+   * again when the web font finishes loading and the metrics change. Measuring
+   * it is the only version that is right at every width and at both stages of
+   * the font swap.
+   */
+  useEffect(() => {
+    const element = masthead.current
+    if (!element || typeof ResizeObserver === 'undefined') {
+      return
+    }
+
+    const observer = new ResizeObserver(() => {
+      document.documentElement.style.setProperty(
+        '--masthead-h',
+        `${element.getBoundingClientRect().height}px`,
+      )
+    })
+
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -72,6 +108,13 @@ export default function App() {
     return tally
   }, [jobs])
 
+  const openOrders = useMemo(
+    () =>
+      (jobs ?? []).filter((job) => !statuses.find((s) => s.status === job.status)?.isTerminal)
+        .length,
+    [jobs, statuses],
+  )
+
   const handleUpdate = useCallback(async (job: RepairJob, next: RepairStatus) => {
     setSavingId(job.id)
     setError(null)
@@ -103,13 +146,31 @@ export default function App() {
         Skip to repair orders
       </a>
 
-      <header className="masthead">
+      <header className="masthead" ref={masthead}>
         <div className="masthead__inner">
-          <div>
-            <h1>
-              CollisionFlow <span className="masthead__sub">Repair Status Tracker</span>
-            </h1>
-          </div>
+          <h1 className="wordmark">
+            CollisionFlow
+            <span className="wordmark__sub">Repair status tracker</span>
+          </h1>
+
+          {/* In-page anchors, in the bracket style the labels use everywhere else.
+              Hidden below 60rem rather than folded into a hamburger: four links to
+              four sections of one page do not justify a menu a keyboard user has
+              to open. */}
+          <nav className="masthead__nav" aria-label="Sections">
+            {NAV.map((item) => (
+              <a key={item.href} className="navlink" href={item.href}>
+                <span className="navlink__bracket" aria-hidden="true">
+                  [
+                </span>{' '}
+                {item.label}{' '}
+                <span className="navlink__bracket" aria-hidden="true">
+                  ]
+                </span>
+              </a>
+            ))}
+          </nav>
+
           <p className={`pill ${live ? 'pill--live' : 'pill--degraded'}`}>
             <span className="pill__dot" aria-hidden="true" />
             {live ? 'Live · Azure SQL' : 'Demo · in-memory'}
@@ -124,31 +185,73 @@ export default function App() {
           {announcement}
         </p>
 
-        <section className="section section--board" id="board" aria-labelledby="board-heading">
-          <p className="section__eyebrow">The shop floor</p>
-          <h2 id="board-heading">Repair orders</h2>
-          <p className="section__lead">
-            Every dropdown below offers only the moves this order can legally make next — the
-            server decides, the page renders. Try to send an illegal one with curl and the
-            database still refuses it.
+        <section className="hero" aria-labelledby="hero-heading">
+          <Eyebrow>Collision repair · shop floor</Eyebrow>
+          <h2 className="hero__headline" id="hero-heading">
+            Every repair order, <em>from the inside.</em>
+          </h2>
+          <p className="hero__lead">
+            The status board a service advisor works from. The workflow is not written in this
+            page, or in the API — it is rows in a table, and the database refuses an illegal
+            move even when the request never touches this code.
           </p>
+
+          <ul className="hero__meta">
+            <li>
+              <span className="hero__meta-label">Open orders</span>
+              <span className="hero__meta-value">
+                {jobs === null ? '—' : String(openOrders).padStart(2, '0')}
+              </span>
+            </li>
+            <li>
+              <span className="hero__meta-label">In the shop</span>
+              <span className="hero__meta-value">
+                {jobs === null ? '—' : String(jobs.length).padStart(2, '0')}
+              </span>
+            </li>
+            <li>
+              <span className="hero__meta-label">Workflow states</span>
+              <span className="hero__meta-value">
+                {statuses.length === 0 ? '—' : String(statuses.length).padStart(2, '0')}
+              </span>
+            </li>
+            <li>
+              <span className="hero__meta-label">Serving from</span>
+              <span className="hero__meta-value">{live ? 'Azure SQL' : 'In-memory'}</span>
+            </li>
+          </ul>
+        </section>
+
+        <section className="section section--board" id="board" aria-labelledby="board-heading">
+          <div className="section__head">
+            <Eyebrow>The shop floor</Eyebrow>
+            <h2 id="board-heading">Repair orders</h2>
+            <p className="section__lead">
+              Every dropdown below offers only the moves this order can legally make next — the
+              server decides, the page renders. Try to send an illegal one with curl and the
+              database still refuses it.
+            </p>
+          </div>
 
           <DataSourceBanner status={systemStatus} />
 
           {error && (
             <p className="alert" role="alert">
-              {error}
+              <strong>Error</strong>
+              <span>{error}</span>
             </p>
           )}
 
-          {jobs === null && !error && <p>Warming up the lift&hellip;</p>}
+          {jobs === null && !error && <p className="loading">Warming up the lift&hellip;</p>}
 
           {jobs !== null && (
             <>
               <ul className="tally">
                 {statuses.map((s) => (
                   <li key={s.status} className={`tally__item tally__item--${s.status}`}>
-                    <span className="tally__count">{counts.get(s.status) ?? 0}</span>
+                    <span className="tally__count">
+                      {String(counts.get(s.status) ?? 0).padStart(2, '0')}
+                    </span>
                     <span className="tally__label">{s.displayName}</span>
                   </li>
                 ))}
@@ -164,7 +267,7 @@ export default function App() {
                       <th scope="col">RO #</th>
                       <th scope="col">Customer</th>
                       <th scope="col">Vehicle</th>
-                      <th scope="col">Repair center</th>
+                      <th scope="col">Center</th>
                       <th scope="col">Status</th>
                       <th scope="col">Move</th>
                       <th scope="col">Audit</th>
@@ -184,7 +287,7 @@ export default function App() {
                 </table>
               </div>
 
-              {jobs.length === 0 && <p>All bays clear. Suspiciously quiet.</p>}
+              {jobs.length === 0 && <p className="loading">All bays clear. Suspiciously quiet.</p>}
             </>
           )}
         </section>
@@ -195,21 +298,26 @@ export default function App() {
 
         <section className="section section--alt" aria-labelledby="close-heading">
           <Reveal>
-            <h2 id="close-heading">Built for Crash Champions</h2>
-            <p className="section__lead">
-              crashchampions.com already gives customers a way to track a repair. This is the
-              counterpart a service advisor would work from — the same information, from the
-              inside.
-            </p>
+            <div className="section__head">
+              <Eyebrow>Context</Eyebrow>
+              <h2 id="close-heading">Built for Crash Champions</h2>
+              <p className="section__lead">
+                crashchampions.com already gives customers a way to track a repair. This is the
+                counterpart a service advisor would work from — the same information, from the
+                inside.
+              </p>
+            </div>
           </Reveal>
         </section>
       </main>
 
       <footer className="footer">
-        <p>
-          CollisionFlow &middot; take-home project &middot;{' '}
-          <a href="https://github.com/glebbatov/CollisionFlow">source on GitHub</a>
-        </p>
+        <div className="footer__inner">
+          <p>CollisionFlow · take-home project</p>
+          <p>
+            <a href="https://github.com/glebbatov/CollisionFlow">Source on GitHub</a>
+          </p>
+        </div>
       </footer>
     </>
   )

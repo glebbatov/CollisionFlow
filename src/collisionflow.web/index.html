@@ -4,7 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Repair order status tracking for collision repair centers." />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0e0e0e" />
     <title>CollisionFlow - Repair Status Tracker</title>
+
+    <!--
+      Two families carry the whole design: a light geometric sans for display
+      type and DM Mono for every label and number.
+
+      preconnect opens the TLS handshake to the font host while the HTML is
+      still parsing, which removes a full round trip from first paint.
+      display=swap renders in the fallback stack immediately rather than
+      holding text invisible - a blank headline is a worse failure than a
+      reflow, and the fallback metrics are close enough that the swap is not
+      jarring. If the request is blocked entirely the page still reads
+      correctly in Segoe UI and Cascadia Mono.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@200;300;400;500&display=swap"
+    />
   </head>
   <body>
     <div id="root"></div>

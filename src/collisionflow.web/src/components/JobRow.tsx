@@ -20,15 +20,26 @@ export function JobRow({ job, labelFor, isSaving, onUpdate }: Props) {
 
   return (
     <>
+      {/*
+        Each cell repeats its column heading in data-label. Below 60rem the
+        table collapses to a stack of blocks and the visual header row is
+        gone, so CSS draws the label from this attribute instead — the
+        heading and its value stay adjacent at every width, and the real
+        <thead> stays in the accessibility tree either way.
+      */}
       <tr>
-        <td className="cell--mono">{job.jobNumber}</td>
-        <td>{job.customerName}</td>
-        <td>{job.vehicleDescription}</td>
-        <td>{job.repairCenter}</td>
-        <td>
+        <td className="cell--mono" data-label="RO #">
+          {job.jobNumber}
+        </td>
+        <td className="cell--name" data-label="Customer">
+          {job.customerName}
+        </td>
+        <td data-label="Vehicle">{job.vehicleDescription}</td>
+        <td data-label="Center">{job.repairCenter}</td>
+        <td data-label="Status">
           <StatusBadge status={job.status} label={job.statusDisplayName} />
         </td>
-        <td>
+        <td data-label="Move">
           {terminal ? (
             <span className="cell--muted">No further steps</span>
           ) : (
@@ -67,7 +78,7 @@ export function JobRow({ job, labelFor, isSaving, onUpdate }: Props) {
             </div>
           )}
         </td>
-        <td>
+        <td data-label="Audit">
           {/* aria-expanded and aria-controls are what turn a styled button into a
               disclosure a screen reader can describe and navigate. */}
           <button
