@@ -1,0 +1,246 @@
+/*
+  Design tokens live in one place so colour, spacing and type stay consistent
+  as the UI grows. The palette is deliberately dark - a shop floor board read
+  under fluorescent light, not a marketing page.
+*/
+:root {
+  --asphalt: #12141a;
+  --surface: #1b1f27;
+  --surface-raised: #232833;
+  --line: #313846;
+  --ink: #e8eaed;
+  --ink-muted: #a5aebc;
+  --safety: #ffc72c;
+  --danger: #ff8a80;
+
+  --status-Received: #7dd3fc;
+  --status-InProgress: #ffc72c;
+  --status-WaitingOnParts: #fb923c;
+  --status-QualityCheck: #c4b5fd;
+  --status-ReadyForPickup: #4ade80;
+  --status-Completed: #94a3b8;
+
+  --radius: 6px;
+  --gap: 1rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--asphalt);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+}
+
+/* A visible, high-contrast focus ring on every interactive element.
+   WCAG 2.2 raised the bar here (SC 2.4.11 / 2.4.13) and the browser default
+   is easy to lose against a dark surface. */
+:focus-visible {
+  outline: 3px solid var(--safety);
+  outline-offset: 2px;
+}
+
+/* Present to screen readers, absent from the screen. Not display:none,
+   which would hide it from assistive technology too. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  padding: 0.75rem 1rem;
+  background: var(--safety);
+  color: var(--asphalt);
+  font-weight: 600;
+  z-index: 10;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+.masthead {
+  border-bottom: 3px solid var(--safety);
+  padding: 1.25rem 1.5rem;
+  background: var(--surface);
+}
+
+.masthead h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+}
+
+.masthead__sub {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+  font-weight: 400;
+  margin-left: 0.5rem;
+}
+
+main {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.alert {
+  border-left: 4px solid var(--danger);
+  background: var(--surface-raised);
+  color: var(--ink);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+}
+
+.tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.tally__item {
+  flex: 1 1 8rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+}
+
+.tally__count {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tally__label {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.board {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.board th,
+.board td {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.board th {
+  background: var(--surface-raised);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+.cell--mono {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+
+.cell--muted {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+/*
+  The badge keeps its text on a neutral chip and uses colour only on the rule
+  and the glyph. Contrast is therefore identical for every status, instead of
+  depending on which hue a status happens to have.
+*/
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--surface-raised);
+  border-left: 4px solid var(--line);
+  border-radius: 3px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.badge__glyph {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.move {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+select,
+button {
+  font: inherit;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  padding: 0.45rem 0.6rem;
+  background: var(--surface-raised);
+  color: var(--ink);
+  /* WCAG 2.2 SC 2.5.8 asks for a 24x24 minimum target. */
+  min-height: 2.25rem;
+}
+
+button {
+  background: var(--safety);
+  color: var(--asphalt);
+  border-color: var(--safety);
+  font-weight: 600;
+  cursor: pointer;
+  padding-inline: 1rem;
+}
+
+button:disabled,
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* Per-status accents. Colour is reinforcement only - every badge and tile
+   also carries its text label. */
+.badge--Received { border-left-color: var(--status-Received); }
+.badge--Received .badge__glyph { color: var(--status-Received); }
+.tally__item--Received { border-top-color: var(--status-Received); }
+.badge--InProgress { border-left-color: var(--status-InProgress); }
+.badge--InProgress .badge__glyph { color: var(--status-InProgress); }
+.tally__item--InProgress { border-top-color: var(--status-InProgress); }
+.badge--WaitingOnParts { border-left-color: var(--status-WaitingOnParts); }
+.badge--WaitingOnParts .badge__glyph { color: var(--status-WaitingOnParts); }
+.tally__item--WaitingOnParts { border-top-color: var(--status-WaitingOnParts); }
+.badge--QualityCheck { border-left-color: var(--status-QualityCheck); }
+.badge--QualityCheck .badge__glyph { color: var(--status-QualityCheck); }
+.tally__item--QualityCheck { border-top-color: var(--status-QualityCheck); }
+.badge--ReadyForPickup { border-left-color: var(--status-ReadyForPickup); }
+.badge--ReadyForPickup .badge__glyph { color: var(--status-ReadyForPickup); }
+.tally__item--ReadyForPickup { border-top-color: var(--status-ReadyForPickup); }
+.badge--Completed { border-left-color: var(--status-Completed); }
+.badge--Completed .badge__glyph { color: var(--status-Completed); }
+.tally__item--Completed { border-top-color: var(--status-Completed); }

@@ -15,4 +15,11 @@
     <ProjectReference Include="..\CollisionFlow.Infrastructure\CollisionFlow.Infrastructure.csproj" />
   </ItemGroup>
 
+  <!-- The SPA build creates wwwroot, but the API must also run standalone before
+       the first "npm run build". Creating it here silences a startup warning
+       without committing an empty directory. -->
+  <Target Name="EnsureWebRoot" BeforeTargets="Build">
+    <MakeDir Directories="$(MSBuildProjectDirectory)\wwwroot" Condition="!Exists('$(MSBuildProjectDirectory)\wwwroot')" />
+  </Target>
+
 </Project>

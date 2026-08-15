@@ -410,3 +410,6 @@ test-results/
 .env
 .env.*
 !.env.example
+
+# Built SPA output - produced by "npm run build", never committed.
+src/CollisionFlow.Api/wwwroot/
